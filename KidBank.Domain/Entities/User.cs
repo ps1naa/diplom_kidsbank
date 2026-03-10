@@ -7,18 +7,18 @@ public class User
     public Guid Id { get; private set; }
     public string Email { get; private set; } = null!;
     public string PasswordHash { get; private set; } = null!;
-    public string FirstName { get; private set; } = null!;
-    public string LastName { get; private set; } = null!;
+    public string FirstName { get; internal set; } = null!;
+    public string LastName { get; internal set; } = null!;
     public UserRole Role { get; private set; }
     public Guid FamilyId { get; private set; }
     public DateTime DateOfBirth { get; private set; }
-    public string? AvatarUrl { get; private set; }
-    public int TotalXp { get; private set; }
-    public int CurrentStreak { get; private set; }
-    public DateTime? LastActivityDate { get; private set; }
-    public bool IsDeleted { get; private set; }
+    public string? AvatarUrl { get; internal set; }
+    public int TotalXp { get; internal set; }
+    public int CurrentStreak { get; internal set; }
+    public DateTime? LastActivityDate { get; internal set; }
+    public bool IsDeleted { get; internal set; }
     public DateTime CreatedAt { get; private set; }
-    public DateTime? UpdatedAt { get; private set; }
+    public DateTime? UpdatedAt { get; internal set; }
 
     public Family Family { get; private set; } = null!;
     public ICollection<Account> Accounts { get; private set; } = new List<Account>();
@@ -84,53 +84,4 @@ public class User
         };
     }
 
-    public void UpdateProfile(string firstName, string lastName, string? avatarUrl)
-    {
-        FirstName = firstName;
-        LastName = lastName;
-        AvatarUrl = avatarUrl;
-        UpdatedAt = DateTime.UtcNow;
-    }
-
-    public void AddXp(int xp)
-    {
-        if (xp <= 0) return;
-        TotalXp += xp;
-        UpdatedAt = DateTime.UtcNow;
-    }
-
-    public void UpdateStreak()
-    {
-        var today = DateTime.UtcNow.Date;
-        
-        if (LastActivityDate?.Date == today)
-            return;
-
-        if (LastActivityDate?.Date == today.AddDays(-1))
-        {
-            CurrentStreak++;
-        }
-        else
-        {
-            CurrentStreak = 1;
-        }
-
-        LastActivityDate = today;
-        UpdatedAt = DateTime.UtcNow;
-    }
-
-    public void ResetStreak()
-    {
-        CurrentStreak = 0;
-        UpdatedAt = DateTime.UtcNow;
-    }
-
-    public void SoftDelete()
-    {
-        IsDeleted = true;
-        UpdatedAt = DateTime.UtcNow;
-    }
-
-    public bool IsParent() => Role == UserRole.Parent;
-    public bool IsKid() => Role == UserRole.Kid;
 }

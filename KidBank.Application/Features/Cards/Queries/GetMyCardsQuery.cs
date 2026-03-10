@@ -11,11 +11,11 @@ public record GetMyCardsQuery : IRequest<Result<List<VirtualCardDto>>>;
 public class GetMyCardsQueryHandler : IRequestHandler<GetMyCardsQuery, Result<List<VirtualCardDto>>>
 {
     private readonly IApplicationDbContext _context;
-    private readonly ICurrentUserService _currentUserService;
+    private readonly IIdentityService _currentUserService;
 
     public GetMyCardsQueryHandler(
         IApplicationDbContext context,
-        ICurrentUserService currentUserService)
+        IIdentityService currentUserService)
     {
         _context = context;
         _currentUserService = currentUserService;

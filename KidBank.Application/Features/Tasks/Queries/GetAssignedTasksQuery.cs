@@ -12,11 +12,11 @@ public record GetAssignedTasksQuery(string? Status = null) : IRequest<Result<Lis
 public class GetAssignedTasksQueryHandler : IRequestHandler<GetAssignedTasksQuery, Result<List<TaskDto>>>
 {
     private readonly IApplicationDbContext _context;
-    private readonly ICurrentUserService _currentUserService;
+    private readonly IIdentityService _currentUserService;
 
     public GetAssignedTasksQueryHandler(
         IApplicationDbContext context,
-        ICurrentUserService currentUserService)
+        IIdentityService currentUserService)
     {
         _context = context;
         _currentUserService = currentUserService;

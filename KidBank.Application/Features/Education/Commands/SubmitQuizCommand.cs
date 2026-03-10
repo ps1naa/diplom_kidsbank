@@ -35,12 +35,12 @@ public class SubmitQuizCommandValidator : AbstractValidator<SubmitQuizCommand>
 public class SubmitQuizCommandHandler : IRequestHandler<SubmitQuizCommand, Result<QuizResultDto>>
 {
     private readonly IApplicationDbContext _context;
-    private readonly ICurrentUserService _currentUserService;
+    private readonly IIdentityService _currentUserService;
     private readonly GamificationService _gamificationService;
 
     public SubmitQuizCommandHandler(
         IApplicationDbContext context,
-        ICurrentUserService currentUserService,
+        IIdentityService currentUserService,
         GamificationService gamificationService)
     {
         _context = context;

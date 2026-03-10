@@ -1,14 +1,13 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using KidBank.Application.Common.Interfaces;
 using KidBank.Domain.Entities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 
 namespace KidBank.Infrastructure.Identity;
 
-public class JwtService : IJwtService
+public class JwtService
 {
     private readonly IConfiguration _configuration;
 

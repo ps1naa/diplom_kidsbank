@@ -1,5 +1,6 @@
 using KidBank.Application.Common.Interfaces;
 using KidBank.Application.Common.Models;
+using KidBank.Domain.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -10,11 +11,11 @@ public record FreezeCardCommand(Guid CardId) : IRequest<Result>;
 public class FreezeCardCommandHandler : IRequestHandler<FreezeCardCommand, Result>
 {
     private readonly IApplicationDbContext _context;
-    private readonly ICurrentUserService _currentUserService;
+    private readonly IIdentityService _currentUserService;
 
     public FreezeCardCommandHandler(
         IApplicationDbContext context,
-        ICurrentUserService currentUserService)
+        IIdentityService currentUserService)
     {
         _context = context;
         _currentUserService = currentUserService;
@@ -37,7 +38,7 @@ public class FreezeCardCommandHandler : IRequestHandler<FreezeCardCommand, Resul
         if (!isOwner && !isParentOfOwner)
             return Error.Forbidden("Cannot manage this card");
 
-        card.Freeze();
+        CardService.Freeze(card);
         await _context.SaveChangesAsync(cancellationToken);
 
         return Result.Success();
@@ -49,11 +50,11 @@ public record UnfreezeCardCommand(Guid CardId) : IRequest<Result>;
 public class UnfreezeCardCommandHandler : IRequestHandler<UnfreezeCardCommand, Result>
 {
     private readonly IApplicationDbContext _context;
-    private readonly ICurrentUserService _currentUserService;
+    private readonly IIdentityService _currentUserService;
 
     public UnfreezeCardCommandHandler(
         IApplicationDbContext context,
-        ICurrentUserService currentUserService)
+        IIdentityService currentUserService)
     {
         _context = context;
         _currentUserService = currentUserService;
@@ -76,7 +77,7 @@ public class UnfreezeCardCommandHandler : IRequestHandler<UnfreezeCardCommand, R
         if (!isOwner && !isParentOfOwner)
             return Error.Forbidden("Cannot manage this card");
 
-        card.Unfreeze();
+        CardService.Unfreeze(card);
         await _context.SaveChangesAsync(cancellationToken);
 
         return Result.Success();

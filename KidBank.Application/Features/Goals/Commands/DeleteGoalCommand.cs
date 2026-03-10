@@ -2,6 +2,7 @@ using FluentValidation;
 using KidBank.Application.Common.Interfaces;
 using KidBank.Application.Common.Models;
 using KidBank.Domain.Enums;
+using KidBank.Domain.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -21,11 +22,11 @@ public class DeleteGoalCommandValidator : AbstractValidator<DeleteGoalCommand>
 public class DeleteGoalCommandHandler : IRequestHandler<DeleteGoalCommand, Result>
 {
     private readonly IApplicationDbContext _context;
-    private readonly ICurrentUserService _currentUserService;
+    private readonly IIdentityService _currentUserService;
 
     public DeleteGoalCommandHandler(
         IApplicationDbContext context,
-        ICurrentUserService currentUserService)
+        IIdentityService currentUserService)
     {
         _context = context;
         _currentUserService = currentUserService;
@@ -61,7 +62,7 @@ public class DeleteGoalCommandHandler : IRequestHandler<DeleteGoalCommand, Resul
             return Error.InvalidOperation("Cannot delete goal with accumulated funds. Withdraw funds first.");
         }
 
-        goal.Cancel();
+        GoalService.Cancel(goal);
         await _context.SaveChangesAsync(cancellationToken);
 
         return Result.Success();

@@ -52,17 +52,14 @@ public class RegisterKidCommandValidator : AbstractValidator<RegisterKidCommand>
 public class RegisterKidCommandHandler : IRequestHandler<RegisterKidCommand, Result<AuthResponse>>
 {
     private readonly IApplicationDbContext _context;
-    private readonly IPasswordHasher _passwordHasher;
-    private readonly IJwtService _jwtService;
+    private readonly IIdentityService _identityService;
 
     public RegisterKidCommandHandler(
         IApplicationDbContext context,
-        IPasswordHasher passwordHasher,
-        IJwtService jwtService)
+        IIdentityService identityService)
     {
         _context = context;
-        _passwordHasher = passwordHasher;
-        _jwtService = jwtService;
+        _identityService = identityService;
     }
 
     public async Task<Result<AuthResponse>> Handle(RegisterKidCommand request, CancellationToken cancellationToken)
@@ -88,7 +85,7 @@ public class RegisterKidCommandHandler : IRequestHandler<RegisterKidCommand, Res
             return Error.Conflict("A user with this email already exists");
         }
 
-        var passwordHash = _passwordHasher.Hash(request.Password);
+        var passwordHash = _identityService.HashPassword(request.Password);
 
         var user = User.CreateKid(
             request.Email,
@@ -102,7 +99,7 @@ public class RegisterKidCommandHandler : IRequestHandler<RegisterKidCommand, Res
 
         var mainAccount = Account.CreateMain(user.Id);
 
-        var (accessToken, jwtId) = _jwtService.GenerateAccessToken(user);
+        var (accessToken, jwtId) = _identityService.GenerateAccessToken(user);
 
         var refreshToken = RefreshToken.Create(
             user.Id,

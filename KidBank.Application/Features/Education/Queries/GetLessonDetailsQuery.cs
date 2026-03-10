@@ -29,11 +29,11 @@ public record QuizDto(
 public class GetLessonDetailsQueryHandler : IRequestHandler<GetLessonDetailsQuery, Result<LessonDetailsDto>>
 {
     private readonly IApplicationDbContext _context;
-    private readonly ICurrentUserService _currentUserService;
+    private readonly IIdentityService _currentUserService;
 
     public GetLessonDetailsQueryHandler(
         IApplicationDbContext context,
-        ICurrentUserService currentUserService)
+        IIdentityService currentUserService)
     {
         _context = context;
         _currentUserService = currentUserService;

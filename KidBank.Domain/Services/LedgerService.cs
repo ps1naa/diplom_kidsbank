@@ -17,7 +17,7 @@ public class LedgerService
             description,
             referenceId);
 
-        account.Credit(amount);
+        ApplyCredit(account, amount);
 
         return transaction;
     }
@@ -27,8 +27,8 @@ public class LedgerService
         if (account == null)
             throw new ArgumentNullException(nameof(account));
 
-        if (!account.HasSufficientFunds(amount))
-            throw new InsufficientFundsException();
+        if (account.Balance < amount)
+            throw DomainException.InsufficientFunds();
 
         var transaction = Transaction.CreateWithdrawal(
             account.Id,
@@ -36,7 +36,7 @@ public class LedgerService
             account.Currency,
             description);
 
-        account.Debit(amount);
+        ApplyDebit(account, amount);
 
         return transaction;
     }
@@ -50,13 +50,13 @@ public class LedgerService
             throw new ArgumentNullException(nameof(destinationAccount));
 
         if (sourceAccount.Id == destinationAccount.Id)
-            throw new InvalidOperationDomainException("Cannot transfer to the same account");
+            throw DomainException.InvalidOperation("Cannot transfer to the same account");
 
         if (sourceAccount.Currency != destinationAccount.Currency)
-            throw new InvalidOperationDomainException("Cannot transfer between accounts with different currencies");
+            throw DomainException.InvalidOperation("Cannot transfer between accounts with different currencies");
 
-        if (!sourceAccount.HasSufficientFunds(amount))
-            throw new InsufficientFundsException();
+        if (sourceAccount.Balance < amount)
+            throw DomainException.InsufficientFunds();
 
         var transaction = Transaction.CreateTransfer(
             sourceAccount.Id,
@@ -65,8 +65,8 @@ public class LedgerService
             sourceAccount.Currency,
             description);
 
-        sourceAccount.Debit(amount);
-        destinationAccount.Credit(amount);
+        ApplyDebit(sourceAccount, amount);
+        ApplyCredit(destinationAccount, amount);
 
         return transaction;
     }
@@ -83,8 +83,8 @@ public class LedgerService
         if (kidAccount == null)
             throw new ArgumentNullException(nameof(kidAccount));
 
-        if (!parentAccount.HasSufficientFunds(amount))
-            throw new InsufficientFundsException();
+        if (parentAccount.Balance < amount)
+            throw DomainException.InsufficientFunds();
 
         var transaction = Transaction.CreateTaskReward(
             parentAccount.Id,
@@ -93,8 +93,8 @@ public class LedgerService
             parentAccount.Currency,
             taskId);
 
-        parentAccount.Debit(amount);
-        kidAccount.Credit(amount);
+        ApplyDebit(parentAccount, amount);
+        ApplyCredit(kidAccount, amount);
 
         return transaction;
     }
@@ -111,8 +111,8 @@ public class LedgerService
         if (kidAccount == null)
             throw new ArgumentNullException(nameof(kidAccount));
 
-        if (!parentAccount.HasSufficientFunds(amount))
-            throw new InsufficientFundsException();
+        if (parentAccount.Balance < amount)
+            throw DomainException.InsufficientFunds();
 
         var transaction = Transaction.CreateMoneyRequestApproval(
             parentAccount.Id,
@@ -121,8 +121,8 @@ public class LedgerService
             parentAccount.Currency,
             requestId);
 
-        parentAccount.Debit(amount);
-        kidAccount.Credit(amount);
+        ApplyDebit(parentAccount, amount);
+        ApplyCredit(kidAccount, amount);
 
         return transaction;
     }
@@ -135,8 +135,8 @@ public class LedgerService
         if (goal == null)
             throw new ArgumentNullException(nameof(goal));
 
-        if (!sourceAccount.HasSufficientFunds(amount))
-            throw new InsufficientFundsException();
+        if (sourceAccount.Balance < amount)
+            throw DomainException.InsufficientFunds();
 
         var transaction = Transaction.CreateGoalDeposit(
             sourceAccount.Id,
@@ -144,8 +144,8 @@ public class LedgerService
             sourceAccount.Currency,
             goal.Id);
 
-        sourceAccount.Debit(amount);
-        goal.Deposit(amount);
+        ApplyDebit(sourceAccount, amount);
+        ApplyGoalDeposit(goal, amount);
 
         return transaction;
     }
@@ -164,9 +164,54 @@ public class LedgerService
             destinationAccount.Currency,
             goal.Id);
 
-        goal.Withdraw(amount);
-        destinationAccount.Credit(amount);
+        ApplyGoalWithdraw(goal, amount);
+        ApplyCredit(destinationAccount, amount);
 
         return transaction;
+    }
+
+    private static void ApplyCredit(Account account, decimal amount)
+    {
+        if (amount <= 0)
+            throw DomainException.InvalidOperation("Credit amount must be positive");
+        account.Balance += amount;
+        account.UpdatedAt = DateTime.UtcNow;
+    }
+
+    private static void ApplyDebit(Account account, decimal amount)
+    {
+        if (amount <= 0)
+            throw DomainException.InvalidOperation("Debit amount must be positive");
+        if (account.Balance < amount)
+            throw DomainException.InsufficientFunds();
+        account.Balance -= amount;
+        account.UpdatedAt = DateTime.UtcNow;
+    }
+
+    private static void ApplyGoalDeposit(WishlistGoal goal, decimal amount)
+    {
+        if (goal.Status != Enums.GoalStatus.Active)
+            throw DomainException.InvalidOperation("Cannot deposit to a non-active goal");
+        if (amount <= 0)
+            throw new ArgumentException("Deposit amount must be positive", nameof(amount));
+        goal.CurrentAmount += amount;
+        goal.UpdatedAt = DateTime.UtcNow;
+        if (goal.CurrentAmount >= goal.TargetAmount)
+        {
+            goal.Status = Enums.GoalStatus.Completed;
+            goal.CompletedAt = DateTime.UtcNow;
+        }
+    }
+
+    private static void ApplyGoalWithdraw(WishlistGoal goal, decimal amount)
+    {
+        if (goal.Status != Enums.GoalStatus.Active)
+            throw DomainException.InvalidOperation("Cannot withdraw from a non-active goal");
+        if (amount <= 0)
+            throw new ArgumentException("Withdrawal amount must be positive", nameof(amount));
+        if (amount > goal.CurrentAmount)
+            throw DomainException.InsufficientFunds();
+        goal.CurrentAmount -= amount;
+        goal.UpdatedAt = DateTime.UtcNow;
     }
 }

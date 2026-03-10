@@ -12,11 +12,11 @@ public record GetSpendingLimitsQuery(Guid KidId) : IRequest<Result<List<Spending
 public class GetSpendingLimitsQueryHandler : IRequestHandler<GetSpendingLimitsQuery, Result<List<SpendingLimitDto>>>
 {
     private readonly IApplicationDbContext _context;
-    private readonly ICurrentUserService _currentUserService;
+    private readonly IIdentityService _currentUserService;
 
     public GetSpendingLimitsQueryHandler(
         IApplicationDbContext context,
-        ICurrentUserService currentUserService)
+        IIdentityService currentUserService)
     {
         _context = context;
         _currentUserService = currentUserService;

@@ -2,6 +2,7 @@ using FluentValidation;
 using KidBank.Application.Common.Interfaces;
 using KidBank.Application.Common.Models;
 using KidBank.Domain.Entities;
+using KidBank.Domain.Services;
 using MediatR;
 
 namespace KidBank.Application.Features.Goals.Commands;
@@ -47,11 +48,11 @@ public class CreateWishlistGoalCommandValidator : AbstractValidator<CreateWishli
 public class CreateWishlistGoalCommandHandler : IRequestHandler<CreateWishlistGoalCommand, Result<GoalDto>>
 {
     private readonly IApplicationDbContext _context;
-    private readonly ICurrentUserService _currentUserService;
+    private readonly IIdentityService _currentUserService;
 
     public CreateWishlistGoalCommandHandler(
         IApplicationDbContext context,
-        ICurrentUserService currentUserService)
+        IIdentityService currentUserService)
     {
         _context = context;
         _currentUserService = currentUserService;
@@ -86,7 +87,7 @@ public class CreateWishlistGoalCommandHandler : IRequestHandler<CreateWishlistGo
             goal.Currency,
             goal.TargetDate,
             goal.Status.ToString(),
-            goal.GetProgress(),
+            GoalService.GetProgress(goal),
             goal.CreatedAt,
             goal.CompletedAt);
     }

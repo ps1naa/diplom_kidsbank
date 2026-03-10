@@ -30,24 +30,24 @@ public class GamificationService
         var streakBonus = CalculateStreakBonus(user.CurrentStreak);
         var totalXp = baseXp + streakBonus;
         
-        user.AddXp(totalXp);
-        user.UpdateStreak();
+        UserService.AddXp(user, totalXp);
+        UserService.UpdateStreak(user);
     }
 
     public void AwardXpForModuleCompletion(User user, int moduleXpReward)
     {
-        user.AddXp(moduleXpReward);
+        UserService.AddXp(user, moduleXpReward);
     }
 
     public void AwardXpForTaskCompletion(User user, int taskXpReward)
     {
-        user.AddXp(taskXpReward);
+        UserService.AddXp(user, taskXpReward);
     }
 
     public void AwardXpForGoalCompletion(User user, int baseXp)
     {
         var bonus = (int)(baseXp * 0.5);
-        user.AddXp(baseXp + bonus);
+        UserService.AddXp(user, baseXp + bonus);
     }
 
     public bool ShouldUnlockAchievement(AchievementProgress progress)
@@ -59,7 +59,7 @@ public class GamificationService
     {
         if (!ShouldUnlockAchievement(progress)) return;
 
-        progress.Unlock();
-        user.AddXp(definition.XpReward);
+        AchievementService.Unlock(progress);
+        UserService.AddXp(user, definition.XpReward);
     }
 }

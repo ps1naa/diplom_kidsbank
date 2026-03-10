@@ -26,8 +26,7 @@ public interface IApplicationDbContext
     DbSet<RecurringAllowance> RecurringAllowances { get; }
     DbSet<Notification> Notifications { get; }
     DbSet<CategoryBlock> CategoryBlocks { get; }
-
-    DbSet<TEntity> Set<TEntity>() where TEntity : class;
-
+    DbSet<AuditLog> AuditLogs { get; }
+    DbSet<AppSetting> AppSettings { get; }
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

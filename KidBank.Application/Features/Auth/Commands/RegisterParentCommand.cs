@@ -66,17 +66,14 @@ public class RegisterParentCommandValidator : AbstractValidator<RegisterParentCo
 public class RegisterParentCommandHandler : IRequestHandler<RegisterParentCommand, Result<AuthResponse>>
 {
     private readonly IApplicationDbContext _context;
-    private readonly IPasswordHasher _passwordHasher;
-    private readonly IJwtService _jwtService;
+    private readonly IIdentityService _identityService;
 
     public RegisterParentCommandHandler(
         IApplicationDbContext context,
-        IPasswordHasher passwordHasher,
-        IJwtService jwtService)
+        IIdentityService identityService)
     {
         _context = context;
-        _passwordHasher = passwordHasher;
-        _jwtService = jwtService;
+        _identityService = identityService;
     }
 
     public async Task<Result<AuthResponse>> Handle(RegisterParentCommand request, CancellationToken cancellationToken)
@@ -91,7 +88,7 @@ public class RegisterParentCommandHandler : IRequestHandler<RegisterParentComman
 
         var family = Family.Create(request.FamilyName);
 
-        var passwordHash = _passwordHasher.Hash(request.Password);
+        var passwordHash = _identityService.HashPassword(request.Password);
 
         var user = User.CreateParent(
             request.Email,
@@ -103,7 +100,7 @@ public class RegisterParentCommandHandler : IRequestHandler<RegisterParentComman
 
         var mainAccount = Account.CreateMain(user.Id);
 
-        var (accessToken, jwtId) = _jwtService.GenerateAccessToken(user);
+        var (accessToken, jwtId) = _identityService.GenerateAccessToken(user);
 
         var refreshToken = RefreshToken.Create(
             user.Id,

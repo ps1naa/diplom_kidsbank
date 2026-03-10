@@ -29,12 +29,12 @@ public record LeaderboardEntryDto(
 public class GetFamilyLeaderboardQueryHandler : IRequestHandler<GetFamilyLeaderboardQuery, Result<FamilyLeaderboardDto>>
 {
     private readonly IApplicationDbContext _context;
-    private readonly ICurrentUserService _currentUserService;
+    private readonly IIdentityService _currentUserService;
     private readonly GamificationService _gamificationService;
 
     public GetFamilyLeaderboardQueryHandler(
         IApplicationDbContext context,
-        ICurrentUserService currentUserService,
+        IIdentityService currentUserService,
         GamificationService gamificationService)
     {
         _context = context;

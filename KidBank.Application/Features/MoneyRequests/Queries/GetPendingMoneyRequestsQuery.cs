@@ -12,11 +12,11 @@ public record GetPendingMoneyRequestsQuery : IRequest<Result<List<MoneyRequestDt
 public class GetPendingMoneyRequestsQueryHandler : IRequestHandler<GetPendingMoneyRequestsQuery, Result<List<MoneyRequestDto>>>
 {
     private readonly IApplicationDbContext _context;
-    private readonly ICurrentUserService _currentUserService;
+    private readonly IIdentityService _currentUserService;
 
     public GetPendingMoneyRequestsQueryHandler(
         IApplicationDbContext context,
-        ICurrentUserService currentUserService)
+        IIdentityService currentUserService)
     {
         _context = context;
         _currentUserService = currentUserService;

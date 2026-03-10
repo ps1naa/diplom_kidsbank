@@ -20,7 +20,7 @@ public record MonthlyStatsDto(
 public class GetMonthlyStatsQueryHandler : IRequestHandler<GetMonthlyStatsQuery, Result<List<MonthlyStatsDto>>>
 {
     private readonly IApplicationDbContext _context;
-    private readonly ICurrentUserService _currentUserService;
+    private readonly IIdentityService _currentUserService;
 
     private static readonly string[] RussianMonths = 
     {
@@ -30,7 +30,7 @@ public class GetMonthlyStatsQueryHandler : IRequestHandler<GetMonthlyStatsQuery,
 
     public GetMonthlyStatsQueryHandler(
         IApplicationDbContext context,
-        ICurrentUserService currentUserService)
+        IIdentityService currentUserService)
     {
         _context = context;
         _currentUserService = currentUserService;

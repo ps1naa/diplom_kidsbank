@@ -34,12 +34,12 @@ public class DepositToKidCommandValidator : AbstractValidator<DepositToKidComman
 public class DepositToKidCommandHandler : IRequestHandler<DepositToKidCommand, Result<TransactionResultDto>>
 {
     private readonly IApplicationDbContext _context;
-    private readonly ICurrentUserService _currentUserService;
+    private readonly IIdentityService _currentUserService;
     private readonly LedgerService _ledgerService;
 
     public DepositToKidCommandHandler(
         IApplicationDbContext context,
-        ICurrentUserService currentUserService,
+        IIdentityService currentUserService,
         LedgerService ledgerService)
     {
         _context = context;
@@ -91,7 +91,7 @@ public class DepositToKidCommandHandler : IRequestHandler<DepositToKidCommand, R
             return Error.NotFound("Kid main account not found");
         }
 
-        if (!parentAccount.HasSufficientFunds(request.Amount))
+        if (parentAccount.Balance < request.Amount)
         {
             return Error.InsufficientFunds();
         }

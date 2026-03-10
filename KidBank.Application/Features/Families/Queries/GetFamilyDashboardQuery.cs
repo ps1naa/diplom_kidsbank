@@ -31,11 +31,11 @@ public record KidSummaryDto(
 public class GetFamilyDashboardQueryHandler : IRequestHandler<GetFamilyDashboardQuery, Result<FamilyDashboardResponse>>
 {
     private readonly IApplicationDbContext _context;
-    private readonly ICurrentUserService _currentUserService;
+    private readonly IIdentityService _currentUserService;
 
     public GetFamilyDashboardQueryHandler(
         IApplicationDbContext context,
-        ICurrentUserService currentUserService)
+        IIdentityService currentUserService)
     {
         _context = context;
         _currentUserService = currentUserService;

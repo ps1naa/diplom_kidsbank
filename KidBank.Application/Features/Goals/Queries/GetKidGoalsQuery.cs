@@ -12,11 +12,11 @@ public record GetKidGoalsQuery(Guid KidId, bool IncludeCompleted = false) : IReq
 public class GetKidGoalsQueryHandler : IRequestHandler<GetKidGoalsQuery, Result<List<GoalDto>>>
 {
     private readonly IApplicationDbContext _context;
-    private readonly ICurrentUserService _currentUserService;
+    private readonly IIdentityService _currentUserService;
 
     public GetKidGoalsQueryHandler(
         IApplicationDbContext context,
-        ICurrentUserService currentUserService)
+        IIdentityService currentUserService)
     {
         _context = context;
         _currentUserService = currentUserService;

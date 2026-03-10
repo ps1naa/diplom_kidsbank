@@ -26,11 +26,11 @@ public class GenerateKidInvitationCommandValidator : AbstractValidator<GenerateK
 public class GenerateKidInvitationCommandHandler : IRequestHandler<GenerateKidInvitationCommand, Result<InvitationResponse>>
 {
     private readonly IApplicationDbContext _context;
-    private readonly ICurrentUserService _currentUserService;
+    private readonly IIdentityService _currentUserService;
 
     public GenerateKidInvitationCommandHandler(
         IApplicationDbContext context,
-        ICurrentUserService currentUserService)
+        IIdentityService currentUserService)
     {
         _context = context;
         _currentUserService = currentUserService;

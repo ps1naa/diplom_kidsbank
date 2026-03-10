@@ -33,13 +33,13 @@ public class TransferBetweenAccountsCommandValidator : AbstractValidator<Transfe
 public class TransferBetweenAccountsCommandHandler : IRequestHandler<TransferBetweenAccountsCommand, Result<TransactionResultDto>>
 {
     private readonly IApplicationDbContext _context;
-    private readonly ICurrentUserService _currentUserService;
+    private readonly IIdentityService _currentUserService;
     private readonly LedgerService _ledgerService;
     private readonly SpendingValidationService _spendingValidationService;
 
     public TransferBetweenAccountsCommandHandler(
         IApplicationDbContext context,
-        ICurrentUserService currentUserService,
+        IIdentityService currentUserService,
         LedgerService ledgerService,
         SpendingValidationService spendingValidationService)
     {
@@ -83,7 +83,7 @@ public class TransferBetweenAccountsCommandHandler : IRequestHandler<TransferBet
             return Error.Forbidden("Cannot transfer to accounts outside your family");
         }
 
-        if (!sourceAccount.HasSufficientFunds(request.Amount))
+        if (sourceAccount.Balance < request.Amount)
         {
             return Error.InsufficientFunds();
         }
@@ -99,9 +99,9 @@ public class TransferBetweenAccountsCommandHandler : IRequestHandler<TransferBet
                 _spendingValidationService.ValidateSpending(limits, request.Amount);
                 _spendingValidationService.RecordSpending(limits, request.Amount);
             }
-            catch (SpendingLimitExceededException ex)
+            catch (DomainException ex) when (ex.Type == ErrorType.SpendingLimitExceeded)
             {
-                return Error.SpendingLimitExceeded(ex.Code == "SPENDING_LIMIT_EXCEEDED" ? 0 : 0, request.Amount);
+                return Error.SpendingLimitExceeded(ex.LimitAmount ?? 0, ex.AttemptedAmount ?? request.Amount);
             }
         }
 

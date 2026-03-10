@@ -19,12 +19,12 @@ public record AchievementUnlockResultDto(
 public class UnlockAchievementCommandHandler : IRequestHandler<UnlockAchievementCommand, Result<AchievementUnlockResultDto>>
 {
     private readonly IApplicationDbContext _context;
-    private readonly ICurrentUserService _currentUserService;
+    private readonly IIdentityService _currentUserService;
     private readonly GamificationService _gamificationService;
 
     public UnlockAchievementCommandHandler(
         IApplicationDbContext context,
-        ICurrentUserService currentUserService,
+        IIdentityService currentUserService,
         GamificationService gamificationService)
     {
         _context = context;

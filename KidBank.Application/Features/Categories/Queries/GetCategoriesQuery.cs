@@ -18,11 +18,11 @@ public record CategoryDto(
 public class GetCategoriesQueryHandler : IRequestHandler<GetCategoriesQuery, Result<List<CategoryDto>>>
 {
     private readonly IApplicationDbContext _context;
-    private readonly ICurrentUserService _currentUserService;
+    private readonly IIdentityService _currentUserService;
 
     public GetCategoriesQueryHandler(
         IApplicationDbContext context,
-        ICurrentUserService currentUserService)
+        IIdentityService currentUserService)
     {
         _context = context;
         _currentUserService = currentUserService;
@@ -37,7 +37,7 @@ public class GetCategoriesQueryHandler : IRequestHandler<GetCategoriesQuery, Res
             .OrderBy(c => c.Name)
             .ToListAsync(cancellationToken);
 
-        var blockedCategoryIds = await _context.Set<Domain.Entities.CategoryBlock>()
+        var blockedCategoryIds = await _context.CategoryBlocks
             .Where(cb => cb.KidId == _currentUserService.UserId.Value)
             .Select(cb => cb.CategoryId)
             .ToListAsync(cancellationToken);

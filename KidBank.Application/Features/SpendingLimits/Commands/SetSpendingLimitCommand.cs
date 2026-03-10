@@ -3,6 +3,7 @@ using KidBank.Application.Common.Interfaces;
 using KidBank.Application.Common.Models;
 using KidBank.Domain.Entities;
 using KidBank.Domain.Enums;
+using KidBank.Domain.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -50,11 +51,11 @@ public class SetSpendingLimitCommandValidator : AbstractValidator<SetSpendingLim
 public class SetSpendingLimitCommandHandler : IRequestHandler<SetSpendingLimitCommand, Result<SpendingLimitDto>>
 {
     private readonly IApplicationDbContext _context;
-    private readonly ICurrentUserService _currentUserService;
+    private readonly IIdentityService _currentUserService;
 
     public SetSpendingLimitCommandHandler(
         IApplicationDbContext context,
-        ICurrentUserService currentUserService)
+        IIdentityService currentUserService)
     {
         _context = context;
         _currentUserService = currentUserService;
@@ -91,7 +92,7 @@ public class SetSpendingLimitCommandHandler : IRequestHandler<SetSpendingLimitCo
 
         if (existingLimit != null)
         {
-            existingLimit.UpdateLimit(request.LimitAmount);
+            SpendingLimitHelper.UpdateLimit(existingLimit, request.LimitAmount);
         }
         else
         {
@@ -112,7 +113,7 @@ public class SetSpendingLimitCommandHandler : IRequestHandler<SetSpendingLimitCo
             $"{kid.FirstName} {kid.LastName}",
             existingLimit.LimitAmount,
             existingLimit.SpentAmount,
-            existingLimit.GetRemainingLimit(),
+            SpendingLimitHelper.GetRemainingLimit(existingLimit),
             existingLimit.Currency,
             existingLimit.Period.ToString(),
             existingLimit.PeriodStartDate,

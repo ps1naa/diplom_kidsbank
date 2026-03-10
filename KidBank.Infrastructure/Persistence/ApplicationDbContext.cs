@@ -31,6 +31,8 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     public DbSet<RecurringAllowance> RecurringAllowances => Set<RecurringAllowance>();
     public DbSet<Notification> Notifications => Set<Notification>();
     public DbSet<CategoryBlock> CategoryBlocks => Set<CategoryBlock>();
+    public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
+    public DbSet<AppSetting> AppSettings => Set<AppSetting>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

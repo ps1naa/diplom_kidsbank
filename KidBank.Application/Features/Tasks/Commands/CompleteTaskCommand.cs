@@ -1,6 +1,8 @@
 using FluentValidation;
 using KidBank.Application.Common.Interfaces;
 using KidBank.Application.Common.Models;
+using KidBank.Domain.Exceptions;
+using KidBank.Domain.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -22,11 +24,11 @@ public class CompleteTaskCommandValidator : AbstractValidator<CompleteTaskComman
 public class CompleteTaskCommandHandler : IRequestHandler<CompleteTaskCommand, Result<TaskDto>>
 {
     private readonly IApplicationDbContext _context;
-    private readonly ICurrentUserService _currentUserService;
+    private readonly IIdentityService _currentUserService;
 
     public CompleteTaskCommandHandler(
         IApplicationDbContext context,
-        ICurrentUserService currentUserService)
+        IIdentityService currentUserService)
     {
         _context = context;
         _currentUserService = currentUserService;
@@ -56,10 +58,10 @@ public class CompleteTaskCommandHandler : IRequestHandler<CompleteTaskCommand, R
 
         try
         {
-            task.MarkAsCompleted(request.ProofUrl);
+            TaskService.MarkAsCompleted(task, request.ProofUrl);
             await _context.SaveChangesAsync(cancellationToken);
         }
-        catch (Domain.Exceptions.InvalidOperationDomainException ex)
+        catch (DomainException ex) when (ex.Type == ErrorType.InvalidOperation)
         {
             return Error.InvalidOperation(ex.Message);
         }

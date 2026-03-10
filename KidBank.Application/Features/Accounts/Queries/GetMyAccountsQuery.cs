@@ -19,11 +19,11 @@ public record AccountDto(
 public class GetMyAccountsQueryHandler : IRequestHandler<GetMyAccountsQuery, Result<List<AccountDto>>>
 {
     private readonly IApplicationDbContext _context;
-    private readonly ICurrentUserService _currentUserService;
+    private readonly IIdentityService _currentUserService;
 
     public GetMyAccountsQueryHandler(
         IApplicationDbContext context,
-        ICurrentUserService currentUserService)
+        IIdentityService currentUserService)
     {
         _context = context;
         _currentUserService = currentUserService;

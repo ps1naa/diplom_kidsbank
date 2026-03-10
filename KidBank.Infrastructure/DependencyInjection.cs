@@ -22,9 +22,13 @@ public static class DependencyInjection
         services.AddScoped<IApplicationDbContext>(provider => 
             provider.GetRequiredService<ApplicationDbContext>());
 
-        services.AddScoped<IPasswordHasher, PasswordHasher>();
-        services.AddScoped<IJwtService, JwtService>();
-        services.AddScoped<ICurrentUserService, CurrentUserService>();
+        services.AddScoped<CurrentUserService>();
+        services.AddScoped<JwtService>();
+        services.AddScoped<PasswordHasher>();
+        services.AddScoped<IIdentityService, Services.IdentityService>();
+        services.AddScoped<IAuditLogger, Services.DbAuditLogger>();
+        services.AddScoped<IAppSettingsService, Services.DbAppSettingsService>();
+        services.AddMemoryCache();
 
         var jwtSecret = configuration["Jwt:SecretKey"] 
             ?? throw new InvalidOperationException("JWT secret key is not configured");

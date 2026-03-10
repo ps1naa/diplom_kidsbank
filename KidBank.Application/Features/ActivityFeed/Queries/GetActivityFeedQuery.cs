@@ -22,11 +22,11 @@ public record ActivityItemDto(
 public class GetActivityFeedQueryHandler : IRequestHandler<GetActivityFeedQuery, Result<PaginatedList<ActivityItemDto>>>
 {
     private readonly IApplicationDbContext _context;
-    private readonly ICurrentUserService _currentUserService;
+    private readonly IIdentityService _currentUserService;
 
     public GetActivityFeedQueryHandler(
         IApplicationDbContext context,
-        ICurrentUserService currentUserService)
+        IIdentityService currentUserService)
     {
         _context = context;
         _currentUserService = currentUserService;

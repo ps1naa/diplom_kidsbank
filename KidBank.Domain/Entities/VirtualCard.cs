@@ -1,3 +1,5 @@
+using KidBank.Domain.Constants;
+
 namespace KidBank.Domain.Entities;
 
 public class VirtualCard
@@ -8,12 +10,12 @@ public class VirtualCard
     public string CardHolderName { get; private set; } = null!;
     public DateTime ExpiryDate { get; private set; }
     public string Cvv { get; private set; } = null!;
-    public bool IsActive { get; private set; }
-    public bool IsFrozen { get; private set; }
+    public bool IsActive { get; internal set; }
+    public bool IsFrozen { get; internal set; }
     public decimal? DailyLimit { get; private set; }
     public decimal? MonthlyLimit { get; private set; }
     public DateTime CreatedAt { get; private set; }
-    public DateTime? UpdatedAt { get; private set; }
+    public DateTime? UpdatedAt { get; internal set; }
 
     public Account Account { get; private set; } = null!;
 
@@ -24,7 +26,7 @@ public class VirtualCard
     public static VirtualCard Create(Guid accountId, string cardHolderName)
     {
         if (string.IsNullOrWhiteSpace(cardHolderName))
-            throw new ArgumentException("Card holder name cannot be empty", nameof(cardHolderName));
+            throw new ArgumentException(Constants.ValidationMessages.CardHolderNameRequired, nameof(cardHolderName));
 
         return new VirtualCard
         {
@@ -54,26 +56,4 @@ public class VirtualCard
         return string.Concat(Enumerable.Range(0, 3).Select(_ => random.Next(0, 10).ToString()));
     }
 
-    public void Freeze()
-    {
-        IsFrozen = true;
-        UpdatedAt = DateTime.UtcNow;
-    }
-
-    public void Unfreeze()
-    {
-        IsFrozen = false;
-        UpdatedAt = DateTime.UtcNow;
-    }
-
-    public void Deactivate()
-    {
-        IsActive = false;
-        UpdatedAt = DateTime.UtcNow;
-    }
-
-    public bool CanBeUsed()
-    {
-        return IsActive && !IsFrozen && ExpiryDate > DateTime.UtcNow;
-    }
 }

@@ -22,13 +22,13 @@ public class ApproveTaskCommandValidator : AbstractValidator<ApproveTaskCommand>
 public class ApproveTaskCommandHandler : IRequestHandler<ApproveTaskCommand, Result<TaskDto>>
 {
     private readonly IApplicationDbContext _context;
-    private readonly ICurrentUserService _currentUserService;
+    private readonly IIdentityService _currentUserService;
     private readonly LedgerService _ledgerService;
     private readonly GamificationService _gamificationService;
 
     public ApproveTaskCommandHandler(
         IApplicationDbContext context,
-        ICurrentUserService currentUserService,
+        IIdentityService currentUserService,
         LedgerService ledgerService,
         GamificationService gamificationService)
     {
@@ -91,7 +91,7 @@ public class ApproveTaskCommandHandler : IRequestHandler<ApproveTaskCommand, Res
                 return Error.NotFound("Kid main account not found");
             }
 
-            if (!parentAccount.HasSufficientFunds(task.RewardAmount))
+            if (parentAccount.Balance < task.RewardAmount)
             {
                 return Error.InsufficientFunds();
             }
@@ -112,7 +112,7 @@ public class ApproveTaskCommandHandler : IRequestHandler<ApproveTaskCommand, Res
             }
         }
 
-        task.Approve();
+        TaskService.Approve(task);
         _gamificationService.AwardXpForTaskCompletion(task.AssignedTo, 50);
 
         await _context.SaveChangesAsync(cancellationToken);

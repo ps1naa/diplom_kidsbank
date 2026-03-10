@@ -9,29 +9,23 @@ public class SpendingValidationService
     {
         foreach (var limit in limits.Where(l => l.IsActive))
         {
-            if (!limit.CanSpend(amount))
-            {
-                throw new SpendingLimitExceededException(limit.LimitAmount, limit.SpentAmount + amount);
-            }
+            if (!SpendingLimitHelper.CanSpend(limit, amount))
+                throw DomainException.SpendingLimitExceeded(limit.LimitAmount, limit.SpentAmount + amount);
         }
     }
 
     public void RecordSpending(IEnumerable<SpendingLimit> limits, decimal amount)
     {
         foreach (var limit in limits.Where(l => l.IsActive))
-        {
-            limit.RecordSpending(amount);
-        }
+            SpendingLimitHelper.RecordSpending(limit, amount);
     }
 
     public decimal GetMinimumAvailableLimit(IEnumerable<SpendingLimit> limits)
     {
         var activeLimits = limits.Where(l => l.IsActive).ToList();
-        
         if (!activeLimits.Any())
             return decimal.MaxValue;
-
-        return activeLimits.Min(l => l.GetRemainingLimit());
+        return activeLimits.Min(l => SpendingLimitHelper.GetRemainingLimit(l));
     }
 
     public SpendingLimitSummary GetSpendingSummary(IEnumerable<SpendingLimit> limits)

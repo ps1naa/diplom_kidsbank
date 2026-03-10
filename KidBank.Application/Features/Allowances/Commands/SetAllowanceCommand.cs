@@ -1,7 +1,9 @@
 using FluentValidation;
 using KidBank.Application.Common.Interfaces;
 using KidBank.Application.Common.Models;
+using KidBank.Domain.Entities;
 using KidBank.Domain.Enums;
+using KidBank.Domain.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -42,11 +44,11 @@ public class SetAllowanceCommandValidator : AbstractValidator<SetAllowanceComman
 public class SetAllowanceCommandHandler : IRequestHandler<SetAllowanceCommand, Result<AllowanceDto>>
 {
     private readonly IApplicationDbContext _context;
-    private readonly ICurrentUserService _currentUserService;
+    private readonly IIdentityService _currentUserService;
 
     public SetAllowanceCommandHandler(
         IApplicationDbContext context,
-        ICurrentUserService currentUserService)
+        IIdentityService currentUserService)
     {
         _context = context;
         _currentUserService = currentUserService;
@@ -71,11 +73,11 @@ public class SetAllowanceCommandHandler : IRequestHandler<SetAllowanceCommand, R
 
         if (existingAllowance != null)
         {
-            existingAllowance.Update(request.Amount, request.Frequency, request.DayOfWeek, request.DayOfMonth);
+            AllowanceService.Update(existingAllowance, request.Amount, request.Frequency, request.DayOfWeek, request.DayOfMonth);
         }
         else
         {
-            existingAllowance = Domain.Entities.RecurringAllowance.Create(
+            existingAllowance = RecurringAllowance.Create(
                 _currentUserService.UserId!.Value,
                 request.KidId,
                 request.Amount,

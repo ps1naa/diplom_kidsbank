@@ -1,21 +1,20 @@
 using System.Diagnostics;
 using KidBank.Application.Common.Interfaces;
 using MediatR;
-using Microsoft.Extensions.Logging;
 
 namespace KidBank.Application.Common.Behaviors;
 
 public class LoggingBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
     where TRequest : IRequest<TResponse>
 {
-    private readonly ILogger<LoggingBehavior<TRequest, TResponse>> _logger;
-    private readonly ICurrentUserService _currentUserService;
+    private readonly IAuditLogger _auditLogger;
+    private readonly IIdentityService _currentUserService;
 
     public LoggingBehavior(
-        ILogger<LoggingBehavior<TRequest, TResponse>> logger,
-        ICurrentUserService currentUserService)
+        IAuditLogger auditLogger,
+        IIdentityService currentUserService)
     {
-        _logger = logger;
+        _auditLogger = auditLogger;
         _currentUserService = currentUserService;
     }
 
@@ -27,11 +26,6 @@ public class LoggingBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, 
         var requestName = typeof(TRequest).Name;
         var userId = _currentUserService.UserId;
 
-        _logger.LogInformation(
-            "Handling {RequestName} for user {UserId}",
-            requestName,
-            userId);
-
         var stopwatch = Stopwatch.StartNew();
 
         try
@@ -40,11 +34,12 @@ public class LoggingBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, 
 
             stopwatch.Stop();
 
-            _logger.LogInformation(
-                "Handled {RequestName} for user {UserId} in {ElapsedMilliseconds}ms",
-                requestName,
-                userId,
-                stopwatch.ElapsedMilliseconds);
+            await _auditLogger.LogAsync(
+                "INFO",
+                $"Handled {requestName}",
+                userId: userId,
+                elapsedMs: stopwatch.ElapsedMilliseconds,
+                cancellationToken: cancellationToken);
 
             return response;
         }
@@ -52,12 +47,13 @@ public class LoggingBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, 
         {
             stopwatch.Stop();
 
-            _logger.LogError(
-                ex,
-                "Error handling {RequestName} for user {UserId} after {ElapsedMilliseconds}ms",
-                requestName,
-                userId,
-                stopwatch.ElapsedMilliseconds);
+            await _auditLogger.LogAsync(
+                "ERROR",
+                $"Error handling {requestName}",
+                exception: ex.ToString(),
+                userId: userId,
+                elapsedMs: stopwatch.ElapsedMilliseconds,
+                cancellationToken: cancellationToken);
 
             throw;
         }

@@ -11,11 +11,11 @@ public record GetKidAccountsQuery(Guid KidId) : IRequest<Result<List<AccountDto>
 public class GetKidAccountsQueryHandler : IRequestHandler<GetKidAccountsQuery, Result<List<AccountDto>>>
 {
     private readonly IApplicationDbContext _context;
-    private readonly ICurrentUserService _currentUserService;
+    private readonly IIdentityService _currentUserService;
 
     public GetKidAccountsQueryHandler(
         IApplicationDbContext context,
-        ICurrentUserService currentUserService)
+        IIdentityService currentUserService)
     {
         _context = context;
         _currentUserService = currentUserService;

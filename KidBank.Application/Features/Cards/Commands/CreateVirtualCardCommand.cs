@@ -34,11 +34,11 @@ public class CreateVirtualCardCommandValidator : AbstractValidator<CreateVirtual
 public class CreateVirtualCardCommandHandler : IRequestHandler<CreateVirtualCardCommand, Result<VirtualCardDto>>
 {
     private readonly IApplicationDbContext _context;
-    private readonly ICurrentUserService _currentUserService;
+    private readonly IIdentityService _currentUserService;
 
     public CreateVirtualCardCommandHandler(
         IApplicationDbContext context,
-        ICurrentUserService currentUserService)
+        IIdentityService currentUserService)
     {
         _context = context;
         _currentUserService = currentUserService;

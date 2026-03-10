@@ -1,5 +1,6 @@
 using KidBank.Application.Common.Interfaces;
 using KidBank.Application.Common.Models;
+using KidBank.Domain.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -19,11 +20,11 @@ public record NotificationDto(
 public class GetNotificationsQueryHandler : IRequestHandler<GetNotificationsQuery, Result<List<NotificationDto>>>
 {
     private readonly IApplicationDbContext _context;
-    private readonly ICurrentUserService _currentUserService;
+    private readonly IIdentityService _currentUserService;
 
     public GetNotificationsQueryHandler(
         IApplicationDbContext context,
-        ICurrentUserService currentUserService)
+        IIdentityService currentUserService)
     {
         _context = context;
         _currentUserService = currentUserService;
@@ -57,11 +58,11 @@ public record MarkNotificationReadCommand(Guid NotificationId) : IRequest<Result
 public class MarkNotificationReadCommandHandler : IRequestHandler<MarkNotificationReadCommand, Result>
 {
     private readonly IApplicationDbContext _context;
-    private readonly ICurrentUserService _currentUserService;
+    private readonly IIdentityService _currentUserService;
 
     public MarkNotificationReadCommandHandler(
         IApplicationDbContext context,
-        ICurrentUserService currentUserService)
+        IIdentityService currentUserService)
     {
         _context = context;
         _currentUserService = currentUserService;
@@ -77,7 +78,7 @@ public class MarkNotificationReadCommandHandler : IRequestHandler<MarkNotificati
         if (notification == null)
             return Error.NotFound("Notification", request.NotificationId);
 
-        notification.MarkAsRead();
+        NotificationService.MarkAsRead(notification);
         await _context.SaveChangesAsync(cancellationToken);
 
         return Result.Success();

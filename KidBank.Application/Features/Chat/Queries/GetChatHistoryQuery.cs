@@ -14,11 +14,11 @@ public record GetChatHistoryQuery(
 public class GetChatHistoryQueryHandler : IRequestHandler<GetChatHistoryQuery, Result<PaginatedList<ChatMessageDto>>>
 {
     private readonly IApplicationDbContext _context;
-    private readonly ICurrentUserService _currentUserService;
+    private readonly IIdentityService _currentUserService;
 
     public GetChatHistoryQueryHandler(
         IApplicationDbContext context,
-        ICurrentUserService currentUserService)
+        IIdentityService currentUserService)
     {
         _context = context;
         _currentUserService = currentUserService;

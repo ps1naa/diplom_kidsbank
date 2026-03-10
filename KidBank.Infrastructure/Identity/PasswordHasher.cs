@@ -1,9 +1,8 @@
-using KidBank.Application.Common.Interfaces;
 using BCrypt.Net;
 
 namespace KidBank.Infrastructure.Identity;
 
-public class PasswordHasher : IPasswordHasher
+public class PasswordHasher
 {
     public string Hash(string password)
     {

@@ -2,6 +2,7 @@ using FluentValidation;
 using KidBank.Application.Common.Interfaces;
 using KidBank.Application.Common.Models;
 using KidBank.Application.Features.Users.Queries;
+using KidBank.Domain.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -41,11 +42,11 @@ public class UpdateProfileCommandValidator : AbstractValidator<UpdateProfileComm
 public class UpdateProfileCommandHandler : IRequestHandler<UpdateProfileCommand, Result<UserProfileDto>>
 {
     private readonly IApplicationDbContext _context;
-    private readonly ICurrentUserService _currentUserService;
+    private readonly IIdentityService _currentUserService;
 
     public UpdateProfileCommandHandler(
         IApplicationDbContext context,
-        ICurrentUserService currentUserService)
+        IIdentityService currentUserService)
     {
         _context = context;
         _currentUserService = currentUserService;
@@ -67,7 +68,7 @@ public class UpdateProfileCommandHandler : IRequestHandler<UpdateProfileCommand,
             return Error.NotFound("User", _currentUserService.UserId.Value);
         }
 
-        user.UpdateProfile(request.FirstName, request.LastName, request.AvatarUrl);
+        UserService.UpdateProfile(user, request.FirstName, request.LastName, request.AvatarUrl);
 
         await _context.SaveChangesAsync(cancellationToken);
 

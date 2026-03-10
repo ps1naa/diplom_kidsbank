@@ -1,12 +1,11 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using KidBank.Application.Common.Interfaces;
 using KidBank.Domain.Enums;
 using Microsoft.AspNetCore.Http;
 
 namespace KidBank.Infrastructure.Identity;
 
-public class CurrentUserService : ICurrentUserService
+public class CurrentUserService
 {
     private readonly IHttpContextAccessor _httpContextAccessor;
 

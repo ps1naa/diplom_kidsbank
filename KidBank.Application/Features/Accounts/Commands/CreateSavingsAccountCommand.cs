@@ -22,11 +22,11 @@ public class CreateSavingsAccountCommandValidator : AbstractValidator<CreateSavi
 public class CreateSavingsAccountCommandHandler : IRequestHandler<CreateSavingsAccountCommand, Result<AccountDto>>
 {
     private readonly IApplicationDbContext _context;
-    private readonly ICurrentUserService _currentUserService;
+    private readonly IIdentityService _currentUserService;
 
     public CreateSavingsAccountCommandHandler(
         IApplicationDbContext context,
-        ICurrentUserService currentUserService)
+        IIdentityService currentUserService)
     {
         _context = context;
         _currentUserService = currentUserService;

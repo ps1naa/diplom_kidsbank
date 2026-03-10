@@ -1,6 +1,8 @@
 using FluentValidation;
 using KidBank.Application.Common.Interfaces;
 using KidBank.Application.Common.Models;
+using KidBank.Domain.Enums;
+using KidBank.Domain.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -22,11 +24,11 @@ public class RejectMoneyRequestCommandValidator : AbstractValidator<RejectMoneyR
 public class RejectMoneyRequestCommandHandler : IRequestHandler<RejectMoneyRequestCommand, Result<MoneyRequestDto>>
 {
     private readonly IApplicationDbContext _context;
-    private readonly ICurrentUserService _currentUserService;
+    private readonly IIdentityService _currentUserService;
 
     public RejectMoneyRequestCommandHandler(
         IApplicationDbContext context,
-        ICurrentUserService currentUserService)
+        IIdentityService currentUserService)
     {
         _context = context;
         _currentUserService = currentUserService;
@@ -54,12 +56,12 @@ public class RejectMoneyRequestCommandHandler : IRequestHandler<RejectMoneyReque
             return Error.Forbidden("You can only reject requests directed to you");
         }
 
-        if (!moneyRequest.IsPending())
+        if (moneyRequest.Status != MoneyRequestStatus.Pending)
         {
             return Error.InvalidOperation("Can only reject pending requests");
         }
 
-        moneyRequest.Reject(request.Note);
+        MoneyRequestService.Reject(moneyRequest, request.Note);
         await _context.SaveChangesAsync(cancellationToken);
 
         return new MoneyRequestDto(

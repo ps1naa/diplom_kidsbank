@@ -1,3 +1,5 @@
+using KidBank.Domain.Constants;
+
 namespace KidBank.Application.Common.Models;
 
 public class Result
@@ -48,35 +50,35 @@ public record Error(string Code, string Message)
     public static readonly Error None = new(string.Empty, string.Empty);
 
     public static Error NotFound(string entityName, Guid id) =>
-        new("NOT_FOUND", $"{entityName} with id {id} was not found");
+        new(ErrorCodes.NotFound, $"{entityName} with id {id} was not found");
 
     public static Error NotFound(string message) =>
-        new("NOT_FOUND", message);
+        new(ErrorCodes.NotFound, message);
 
     public static Error Validation(string message) =>
-        new("VALIDATION_ERROR", message);
+        new(ErrorCodes.Validation, message);
 
     public static Error Unauthorized(string message = "You are not authorized to perform this action") =>
-        new("UNAUTHORIZED", message);
+        new(ErrorCodes.Unauthorized, message);
 
     public static Error Forbidden(string message = "You do not have permission to access this resource") =>
-        new("FORBIDDEN", message);
+        new(ErrorCodes.Forbidden, message);
 
     public static Error Conflict(string message) =>
-        new("CONFLICT", message);
+        new(ErrorCodes.Conflict, message);
 
     public static Error InsufficientFunds() =>
-        new("INSUFFICIENT_FUNDS", "Insufficient funds for this operation");
+        new(ErrorCodes.InsufficientFunds, "Insufficient funds for this operation");
 
     public static Error SpendingLimitExceeded(decimal limit, decimal attempted) =>
-        new("SPENDING_LIMIT_EXCEEDED", $"Spending limit of {limit} exceeded. Attempted to spend {attempted}");
+        new(ErrorCodes.SpendingLimitExceeded, $"Spending limit of {limit} exceeded. Attempted to spend {attempted}");
 
     public static Error ConcurrencyConflict() =>
-        new("CONCURRENCY_CONFLICT", "The record was modified by another user. Please retry.");
+        new(ErrorCodes.ConcurrencyConflict, "The record was modified by another user. Please retry.");
 
     public static Error InvalidOperation(string message) =>
-        new("INVALID_OPERATION", message);
+        new(ErrorCodes.InvalidOperation, message);
 
     public static Error InternalError(string message = "An unexpected error occurred") =>
-        new("INTERNAL_ERROR", message);
+        new(ErrorCodes.InternalError, message);
 }

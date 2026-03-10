@@ -28,11 +28,11 @@ public record ModuleProgressDto(
 public class GetEducationProgressQueryHandler : IRequestHandler<GetEducationProgressQuery, Result<EducationProgressSummaryDto>>
 {
     private readonly IApplicationDbContext _context;
-    private readonly ICurrentUserService _currentUserService;
+    private readonly IIdentityService _currentUserService;
 
     public GetEducationProgressQueryHandler(
         IApplicationDbContext context,
-        ICurrentUserService currentUserService)
+        IIdentityService currentUserService)
     {
         _context = context;
         _currentUserService = currentUserService;

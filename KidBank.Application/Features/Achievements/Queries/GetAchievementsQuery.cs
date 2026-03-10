@@ -23,11 +23,11 @@ public record AchievementDto(
 public class GetAchievementsQueryHandler : IRequestHandler<GetAchievementsQuery, Result<List<AchievementDto>>>
 {
     private readonly IApplicationDbContext _context;
-    private readonly ICurrentUserService _currentUserService;
+    private readonly IIdentityService _currentUserService;
 
     public GetAchievementsQueryHandler(
         IApplicationDbContext context,
-        ICurrentUserService currentUserService)
+        IIdentityService currentUserService)
     {
         _context = context;
         _currentUserService = currentUserService;
@@ -74,11 +74,11 @@ public record GetMyAchievementsQuery : IRequest<Result<List<AchievementDto>>>;
 public class GetMyAchievementsQueryHandler : IRequestHandler<GetMyAchievementsQuery, Result<List<AchievementDto>>>
 {
     private readonly IApplicationDbContext _context;
-    private readonly ICurrentUserService _currentUserService;
+    private readonly IIdentityService _currentUserService;
 
     public GetMyAchievementsQueryHandler(
         IApplicationDbContext context,
-        ICurrentUserService currentUserService)
+        IIdentityService currentUserService)
     {
         _context = context;
         _currentUserService = currentUserService;

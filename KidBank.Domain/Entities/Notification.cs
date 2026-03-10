@@ -8,9 +8,9 @@ public class Notification
     public string Title { get; private set; } = null!;
     public string Message { get; private set; } = null!;
     public string? ActionUrl { get; private set; }
-    public bool IsRead { get; private set; }
+    public bool IsRead { get; internal set; }
     public DateTime CreatedAt { get; private set; }
-    public DateTime? ReadAt { get; private set; }
+    public DateTime? ReadAt { get; internal set; }
 
     public User User { get; private set; } = null!;
 
@@ -36,12 +36,4 @@ public class Notification
         };
     }
 
-    public void MarkAsRead()
-    {
-        if (!IsRead)
-        {
-            IsRead = true;
-            ReadAt = DateTime.UtcNow;
-        }
-    }
 }

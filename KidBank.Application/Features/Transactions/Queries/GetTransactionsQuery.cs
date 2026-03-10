@@ -28,11 +28,11 @@ public record TransactionDto(
 public class GetTransactionsQueryHandler : IRequestHandler<GetTransactionsQuery, Result<PaginatedList<TransactionDto>>>
 {
     private readonly IApplicationDbContext _context;
-    private readonly ICurrentUserService _currentUserService;
+    private readonly IIdentityService _currentUserService;
 
     public GetTransactionsQueryHandler(
         IApplicationDbContext context,
-        ICurrentUserService currentUserService)
+        IIdentityService currentUserService)
     {
         _context = context;
         _currentUserService = currentUserService;

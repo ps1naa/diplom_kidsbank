@@ -16,12 +16,12 @@ public record XpResultDto(
 public class AddXpCommandHandler : IRequestHandler<AddXpCommand, Result<XpResultDto>>
 {
     private readonly IApplicationDbContext _context;
-    private readonly ICurrentUserService _currentUserService;
+    private readonly IIdentityService _currentUserService;
     private readonly GamificationService _gamificationService;
 
     public AddXpCommandHandler(
         IApplicationDbContext context,
-        ICurrentUserService currentUserService,
+        IIdentityService currentUserService,
         GamificationService gamificationService)
     {
         _context = context;
@@ -44,7 +44,7 @@ public class AddXpCommandHandler : IRequestHandler<AddXpCommand, Result<XpResult
             return Error.NotFound("User", request.UserId);
         }
 
-        user.AddXp(request.Amount);
+        UserService.AddXp(user, request.Amount);
         await _context.SaveChangesAsync(cancellationToken);
 
         var level = _gamificationService.CalculateLevel(user.TotalXp);

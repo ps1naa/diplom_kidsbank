@@ -30,19 +30,19 @@ public class RefreshTokenCommandValidator : AbstractValidator<RefreshTokenComman
 public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, Result<TokenResponse>>
 {
     private readonly IApplicationDbContext _context;
-    private readonly IJwtService _jwtService;
+    private readonly IIdentityService _identityService;
 
     public RefreshTokenCommandHandler(
         IApplicationDbContext context,
-        IJwtService jwtService)
+        IIdentityService identityService)
     {
         _context = context;
-        _jwtService = jwtService;
+        _identityService = identityService;
     }
 
     public async Task<Result<TokenResponse>> Handle(RefreshTokenCommand request, CancellationToken cancellationToken)
     {
-        if (!_jwtService.ValidateAccessToken(request.AccessToken, out var jwtId))
+        if (!_identityService.ValidateAccessToken(request.AccessToken, out var jwtId))
         {
             return Error.Unauthorized("Invalid access token");
         }
@@ -72,7 +72,7 @@ public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, R
             return Error.Unauthorized("User account is deactivated");
         }
 
-        var (newAccessToken, newJwtId) = _jwtService.GenerateAccessToken(user);
+        var (newAccessToken, newJwtId) = _identityService.GenerateAccessToken(user);
 
         var newRefreshToken = RefreshToken.Create(
             user.Id,

@@ -29,17 +29,14 @@ public class LoginCommandValidator : AbstractValidator<LoginCommand>
 public class LoginCommandHandler : IRequestHandler<LoginCommand, Result<AuthResponse>>
 {
     private readonly IApplicationDbContext _context;
-    private readonly IPasswordHasher _passwordHasher;
-    private readonly IJwtService _jwtService;
+    private readonly IIdentityService _identityService;
 
     public LoginCommandHandler(
         IApplicationDbContext context,
-        IPasswordHasher passwordHasher,
-        IJwtService jwtService)
+        IIdentityService identityService)
     {
         _context = context;
-        _passwordHasher = passwordHasher;
-        _jwtService = jwtService;
+        _identityService = identityService;
     }
 
     public async Task<Result<AuthResponse>> Handle(LoginCommand request, CancellationToken cancellationToken)
@@ -52,12 +49,12 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, Result<AuthResp
             return Error.Unauthorized("Invalid email or password");
         }
 
-        if (!_passwordHasher.Verify(request.Password, user.PasswordHash))
+        if (!_identityService.VerifyPassword(request.Password, user.PasswordHash))
         {
             return Error.Unauthorized("Invalid email or password");
         }
 
-        var (accessToken, jwtId) = _jwtService.GenerateAccessToken(user);
+        var (accessToken, jwtId) = _identityService.GenerateAccessToken(user);
 
         var refreshToken = RefreshToken.Create(
             user.Id,

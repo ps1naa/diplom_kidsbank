@@ -27,12 +27,12 @@ public class DepositToGoalCommandValidator : AbstractValidator<DepositToGoalComm
 public class DepositToGoalCommandHandler : IRequestHandler<DepositToGoalCommand, Result<GoalDto>>
 {
     private readonly IApplicationDbContext _context;
-    private readonly ICurrentUserService _currentUserService;
+    private readonly IIdentityService _currentUserService;
     private readonly LedgerService _ledgerService;
 
     public DepositToGoalCommandHandler(
         IApplicationDbContext context,
-        ICurrentUserService currentUserService,
+        IIdentityService currentUserService,
         LedgerService ledgerService)
     {
         _context = context;
@@ -77,7 +77,7 @@ public class DepositToGoalCommandHandler : IRequestHandler<DepositToGoalCommand,
             return Error.NotFound("Main account not found");
         }
 
-        if (!account.HasSufficientFunds(request.Amount))
+        if (account.Balance < request.Amount)
         {
             return Error.InsufficientFunds();
         }
@@ -103,7 +103,7 @@ public class DepositToGoalCommandHandler : IRequestHandler<DepositToGoalCommand,
             goal.Currency,
             goal.TargetDate,
             goal.Status.ToString(),
-            goal.GetProgress(),
+            GoalService.GetProgress(goal),
             goal.CreatedAt,
             goal.CompletedAt);
     }

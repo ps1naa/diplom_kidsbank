@@ -23,11 +23,11 @@ public record KidDto(
 public class GetKidsQueryHandler : IRequestHandler<GetKidsQuery, Result<List<KidDto>>>
 {
     private readonly IApplicationDbContext _context;
-    private readonly ICurrentUserService _currentUserService;
+    private readonly IIdentityService _currentUserService;
 
     public GetKidsQueryHandler(
         IApplicationDbContext context,
-        ICurrentUserService currentUserService)
+        IIdentityService currentUserService)
     {
         _context = context;
         _currentUserService = currentUserService;

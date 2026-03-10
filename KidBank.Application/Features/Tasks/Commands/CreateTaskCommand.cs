@@ -56,11 +56,11 @@ public class CreateTaskCommandValidator : AbstractValidator<CreateTaskCommand>
 public class CreateTaskCommandHandler : IRequestHandler<CreateTaskCommand, Result<TaskDto>>
 {
     private readonly IApplicationDbContext _context;
-    private readonly ICurrentUserService _currentUserService;
+    private readonly IIdentityService _currentUserService;
 
     public CreateTaskCommandHandler(
         IApplicationDbContext context,
-        ICurrentUserService currentUserService)
+        IIdentityService currentUserService)
     {
         _context = context;
         _currentUserService = currentUserService;

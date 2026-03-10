@@ -1,5 +1,6 @@
 using KidBank.Application.Common.Interfaces;
 using KidBank.Application.Common.Models;
+using KidBank.Domain.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -15,11 +16,11 @@ public record StreakResultDto(
 public class UpdateStreakCommandHandler : IRequestHandler<UpdateStreakCommand, Result<StreakResultDto>>
 {
     private readonly IApplicationDbContext _context;
-    private readonly ICurrentUserService _currentUserService;
+    private readonly IIdentityService _currentUserService;
 
     public UpdateStreakCommandHandler(
         IApplicationDbContext context,
-        ICurrentUserService currentUserService)
+        IIdentityService currentUserService)
     {
         _context = context;
         _currentUserService = currentUserService;
@@ -41,13 +42,13 @@ public class UpdateStreakCommandHandler : IRequestHandler<UpdateStreakCommand, R
         }
 
         var previousStreak = user.CurrentStreak;
-        user.UpdateStreak();
+        UserService.UpdateStreak(user);
         
         var bonusXp = 0;
         if (user.CurrentStreak > previousStreak)
         {
             bonusXp = user.CurrentStreak * 10;
-            user.AddXp(bonusXp);
+            UserService.AddXp(user, bonusXp);
         }
 
         await _context.SaveChangesAsync(cancellationToken);

@@ -24,11 +24,11 @@ public class SetCategoryBlockCommandValidator : AbstractValidator<SetCategoryBlo
 public class SetCategoryBlockCommandHandler : IRequestHandler<SetCategoryBlockCommand, Result>
 {
     private readonly IApplicationDbContext _context;
-    private readonly ICurrentUserService _currentUserService;
+    private readonly IIdentityService _currentUserService;
 
     public SetCategoryBlockCommandHandler(
         IApplicationDbContext context,
-        ICurrentUserService currentUserService)
+        IIdentityService currentUserService)
     {
         _context = context;
         _currentUserService = currentUserService;
@@ -54,7 +54,7 @@ public class SetCategoryBlockCommandHandler : IRequestHandler<SetCategoryBlockCo
         if (category == null)
             return Error.NotFound("Category", request.CategoryId);
 
-        var existingBlock = await _context.Set<Domain.Entities.CategoryBlock>()
+        var existingBlock = await _context.CategoryBlocks
             .FirstOrDefaultAsync(cb => cb.KidId == request.KidId && 
                                        cb.CategoryId == request.CategoryId, 
                                   cancellationToken);
@@ -62,11 +62,11 @@ public class SetCategoryBlockCommandHandler : IRequestHandler<SetCategoryBlockCo
         if (request.IsBlocked && existingBlock == null)
         {
             var block = Domain.Entities.CategoryBlock.Create(request.KidId, request.CategoryId, _currentUserService.UserId!.Value);
-            _context.Set<Domain.Entities.CategoryBlock>().Add(block);
+            _context.CategoryBlocks.Add(block);
         }
         else if (!request.IsBlocked && existingBlock != null)
         {
-            _context.Set<Domain.Entities.CategoryBlock>().Remove(existingBlock);
+            _context.CategoryBlocks.Remove(existingBlock);
         }
 
         await _context.SaveChangesAsync(cancellationToken);

@@ -24,12 +24,12 @@ public class ApproveMoneyRequestCommandValidator : AbstractValidator<ApproveMone
 public class ApproveMoneyRequestCommandHandler : IRequestHandler<ApproveMoneyRequestCommand, Result<MoneyRequestDto>>
 {
     private readonly IApplicationDbContext _context;
-    private readonly ICurrentUserService _currentUserService;
+    private readonly IIdentityService _currentUserService;
     private readonly LedgerService _ledgerService;
 
     public ApproveMoneyRequestCommandHandler(
         IApplicationDbContext context,
-        ICurrentUserService currentUserService,
+        IIdentityService currentUserService,
         LedgerService ledgerService)
     {
         _context = context;
@@ -59,7 +59,7 @@ public class ApproveMoneyRequestCommandHandler : IRequestHandler<ApproveMoneyReq
             return Error.Forbidden("You can only approve requests directed to you");
         }
 
-        if (!moneyRequest.IsPending())
+        if (moneyRequest.Status != MoneyRequestStatus.Pending)
         {
             return Error.InvalidOperation("Can only approve pending requests");
         }
@@ -88,7 +88,7 @@ public class ApproveMoneyRequestCommandHandler : IRequestHandler<ApproveMoneyReq
             return Error.NotFound("Kid main account not found");
         }
 
-        if (!parentAccount.HasSufficientFunds(moneyRequest.Amount))
+        if (parentAccount.Balance < moneyRequest.Amount)
         {
             return Error.InsufficientFunds();
         }
@@ -102,7 +102,7 @@ public class ApproveMoneyRequestCommandHandler : IRequestHandler<ApproveMoneyReq
                 moneyRequest.Id);
 
             _context.Transactions.Add(transaction);
-            moneyRequest.Approve(request.Note);
+            MoneyRequestService.Approve(moneyRequest, request.Note);
 
             await _context.SaveChangesAsync(cancellationToken);
         }

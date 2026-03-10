@@ -1,6 +1,7 @@
 using FluentValidation;
 using KidBank.Application.Common.Interfaces;
 using KidBank.Application.Common.Models;
+using KidBank.Domain.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -25,11 +26,11 @@ public class UpdateSpendingLimitCommandValidator : AbstractValidator<UpdateSpend
 public class UpdateSpendingLimitCommandHandler : IRequestHandler<UpdateSpendingLimitCommand, Result<SpendingLimitDto>>
 {
     private readonly IApplicationDbContext _context;
-    private readonly ICurrentUserService _currentUserService;
+    private readonly IIdentityService _currentUserService;
 
     public UpdateSpendingLimitCommandHandler(
         IApplicationDbContext context,
-        ICurrentUserService currentUserService)
+        IIdentityService currentUserService)
     {
         _context = context;
         _currentUserService = currentUserService;
@@ -58,7 +59,7 @@ public class UpdateSpendingLimitCommandHandler : IRequestHandler<UpdateSpendingL
 
         try
         {
-            limit.UpdateLimit(request.LimitAmount);
+            SpendingLimitHelper.UpdateLimit(limit, request.LimitAmount);
             await _context.SaveChangesAsync(cancellationToken);
         }
         catch (DbUpdateConcurrencyException)
@@ -72,7 +73,7 @@ public class UpdateSpendingLimitCommandHandler : IRequestHandler<UpdateSpendingL
             $"{limit.Kid.FirstName} {limit.Kid.LastName}",
             limit.LimitAmount,
             limit.SpentAmount,
-            limit.GetRemainingLimit(),
+            SpendingLimitHelper.GetRemainingLimit(limit),
             limit.Currency,
             limit.Period.ToString(),
             limit.PeriodStartDate,

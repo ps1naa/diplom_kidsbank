@@ -1,6 +1,7 @@
 using FluentValidation;
 using KidBank.Application.Common.Interfaces;
 using KidBank.Application.Common.Models;
+using KidBank.Domain.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -37,11 +38,11 @@ public class UpdateGoalCommandValidator : AbstractValidator<UpdateGoalCommand>
 public class UpdateGoalCommandHandler : IRequestHandler<UpdateGoalCommand, Result<GoalDto>>
 {
     private readonly IApplicationDbContext _context;
-    private readonly ICurrentUserService _currentUserService;
+    private readonly IIdentityService _currentUserService;
 
     public UpdateGoalCommandHandler(
         IApplicationDbContext context,
-        ICurrentUserService currentUserService)
+        IIdentityService currentUserService)
     {
         _context = context;
         _currentUserService = currentUserService;
@@ -69,7 +70,7 @@ public class UpdateGoalCommandHandler : IRequestHandler<UpdateGoalCommand, Resul
 
         try
         {
-            goal.Update(request.Title, request.Description, request.ImageUrl, request.TargetAmount, request.TargetDate);
+            GoalService.Update(goal, request.Title, request.Description, request.ImageUrl, request.TargetAmount, request.TargetDate);
             await _context.SaveChangesAsync(cancellationToken);
         }
         catch (DbUpdateConcurrencyException)
@@ -87,7 +88,7 @@ public class UpdateGoalCommandHandler : IRequestHandler<UpdateGoalCommand, Resul
             goal.Currency,
             goal.TargetDate,
             goal.Status.ToString(),
-            goal.GetProgress(),
+            GoalService.GetProgress(goal),
             goal.CreatedAt,
             goal.CompletedAt);
     }

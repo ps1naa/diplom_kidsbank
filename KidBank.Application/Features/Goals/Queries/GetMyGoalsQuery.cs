@@ -11,11 +11,11 @@ public record GetMyGoalsQuery(bool IncludeCompleted = false) : IRequest<Result<L
 public class GetMyGoalsQueryHandler : IRequestHandler<GetMyGoalsQuery, Result<List<GoalDto>>>
 {
     private readonly IApplicationDbContext _context;
-    private readonly ICurrentUserService _currentUserService;
+    private readonly IIdentityService _currentUserService;
 
     public GetMyGoalsQueryHandler(
         IApplicationDbContext context,
-        ICurrentUserService currentUserService)
+        IIdentityService currentUserService)
     {
         _context = context;
         _currentUserService = currentUserService;

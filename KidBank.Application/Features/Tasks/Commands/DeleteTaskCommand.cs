@@ -21,11 +21,11 @@ public class DeleteTaskCommandValidator : AbstractValidator<DeleteTaskCommand>
 public class DeleteTaskCommandHandler : IRequestHandler<DeleteTaskCommand, Result>
 {
     private readonly IApplicationDbContext _context;
-    private readonly ICurrentUserService _currentUserService;
+    private readonly IIdentityService _currentUserService;
 
     public DeleteTaskCommandHandler(
         IApplicationDbContext context,
-        ICurrentUserService currentUserService)
+        IIdentityService currentUserService)
     {
         _context = context;
         _currentUserService = currentUserService;

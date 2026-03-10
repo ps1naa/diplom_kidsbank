@@ -1,5 +1,5 @@
+using KidBank.Domain.Constants;
 using KidBank.Domain.Enums;
-using KidBank.Domain.Exceptions;
 
 namespace KidBank.Domain.Entities;
 
@@ -11,10 +11,10 @@ public class MoneyRequest
     public decimal Amount { get; private set; }
     public string Currency { get; private set; } = null!;
     public string? Reason { get; private set; }
-    public MoneyRequestStatus Status { get; private set; }
-    public string? ResponseNote { get; private set; }
+    public MoneyRequestStatus Status { get; internal set; }
+    public string? ResponseNote { get; internal set; }
     public DateTime CreatedAt { get; private set; }
-    public DateTime? RespondedAt { get; private set; }
+    public DateTime? RespondedAt { get; internal set; }
 
     public User Kid { get; private set; } = null!;
     public User Parent { get; private set; } = null!;
@@ -25,11 +25,11 @@ public class MoneyRequest
         Guid kidId,
         Guid parentId,
         decimal amount,
-        string currency = "RUB",
+        string currency = DefaultValues.DefaultCurrency,
         string? reason = null)
     {
         if (amount <= 0)
-            throw new ArgumentException("Request amount must be positive", nameof(amount));
+            throw new ArgumentException(ValidationMessages.AmountMustBePositive, nameof(amount));
 
         return new MoneyRequest
         {
@@ -43,28 +43,4 @@ public class MoneyRequest
             CreatedAt = DateTime.UtcNow
         };
     }
-
-    public void Approve(string? note = null)
-    {
-        if (Status != MoneyRequestStatus.Pending)
-            throw new InvalidOperationDomainException("Only pending requests can be approved");
-
-        Status = MoneyRequestStatus.Approved;
-        ResponseNote = note;
-        RespondedAt = DateTime.UtcNow;
-    }
-
-    public void Reject(string? note = null)
-    {
-        if (Status != MoneyRequestStatus.Pending)
-            throw new InvalidOperationDomainException("Only pending requests can be rejected");
-
-        Status = MoneyRequestStatus.Rejected;
-        ResponseNote = note;
-        RespondedAt = DateTime.UtcNow;
-    }
-
-    public bool IsPending() => Status == MoneyRequestStatus.Pending;
-    public bool IsApproved() => Status == MoneyRequestStatus.Approved;
-    public bool IsRejected() => Status == MoneyRequestStatus.Rejected;
 }

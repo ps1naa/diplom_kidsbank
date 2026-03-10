@@ -25,12 +25,12 @@ public class TopUpAccountCommandValidator : AbstractValidator<TopUpAccountComman
 public class TopUpAccountCommandHandler : IRequestHandler<TopUpAccountCommand, Result<TopUpResultDto>>
 {
     private readonly IApplicationDbContext _context;
-    private readonly ICurrentUserService _currentUserService;
+    private readonly IIdentityService _currentUserService;
     private readonly LedgerService _ledgerService;
 
     public TopUpAccountCommandHandler(
         IApplicationDbContext context,
-        ICurrentUserService currentUserService,
+        IIdentityService currentUserService,
         LedgerService ledgerService)
     {
         _context = context;
