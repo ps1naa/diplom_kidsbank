@@ -9,15 +9,19 @@ namespace KidBank.Infrastructure.Services;
 
 public class DbAppSettingsService : IAppSettingsService
 {
-    private readonly ApplicationDbContext _context;
+    private readonly SettingsDbContext _context;
     private readonly IMemoryCache _cache;
-    private const string CacheKey = "AppSettings";
+    private readonly ISettingsNotifier _notifier;
+    private readonly string _hostname;
+    private const string CachePrefix = "AppSettings_";
     private static readonly TimeSpan CacheDuration = TimeSpan.FromMinutes(5);
 
-    public DbAppSettingsService(ApplicationDbContext context, IMemoryCache cache)
+    public DbAppSettingsService(SettingsDbContext context, IMemoryCache cache, ISettingsNotifier notifier)
     {
         _context = context;
         _cache = cache;
+        _notifier = notifier;
+        _hostname = Environment.MachineName;
     }
 
     public async Task<string?> GetAsync(string key, CancellationToken cancellationToken = default)
@@ -41,10 +45,15 @@ public class DbAppSettingsService : IAppSettingsService
         }
     }
 
-    public async Task SetAsync(string key, string value, string? description = null, CancellationToken cancellationToken = default)
+    public Task SetAsync(string key, string value, string? description = null, CancellationToken cancellationToken = default)
+    {
+        return SetForHostAsync(key, value, _hostname, description, cancellationToken);
+    }
+
+    public async Task SetForHostAsync(string key, string value, string hostname, string? description = null, CancellationToken cancellationToken = default)
     {
         var existing = await _context.AppSettings
-            .FirstOrDefaultAsync(s => s.Key == key, cancellationToken);
+            .FirstOrDefaultAsync(s => s.Key == key && s.Hostname == hostname, cancellationToken);
 
         if (existing != null)
         {
@@ -52,12 +61,13 @@ public class DbAppSettingsService : IAppSettingsService
         }
         else
         {
-            var setting = AppSetting.Create(key, value, description);
+            var setting = AppSetting.Create(key, value, hostname, description);
             _context.AppSettings.Add(setting);
         }
 
         await _context.SaveChangesAsync(cancellationToken);
-        _cache.Remove(CacheKey);
+        InvalidateCache();
+        await _notifier.NotifySettingsChangedAsync(cancellationToken);
     }
 
     public async Task<Dictionary<string, string>> GetAllAsync(CancellationToken cancellationToken = default)
@@ -67,22 +77,36 @@ public class DbAppSettingsService : IAppSettingsService
 
     public Task RefreshCacheAsync(CancellationToken cancellationToken = default)
     {
-        _cache.Remove(CacheKey);
+        InvalidateCache();
         return Task.CompletedTask;
+    }
+
+    private void InvalidateCache()
+    {
+        _cache.Remove(CachePrefix + _hostname);
     }
 
     private async Task<Dictionary<string, string>> GetCachedSettingsAsync(CancellationToken cancellationToken)
     {
-        if (_cache.TryGetValue<Dictionary<string, string>>(CacheKey, out var cached) && cached != null)
-        {
+        var cacheKey = CachePrefix + _hostname;
+
+        if (_cache.TryGetValue<Dictionary<string, string>>(cacheKey, out var cached) && cached != null)
             return cached;
-        }
 
-        var settings = await _context.AppSettings
+        var allSettings = await _context.AppSettings
             .AsNoTracking()
-            .ToDictionaryAsync(s => s.Key, s => s.Value, cancellationToken);
+            .Where(s => s.Hostname == _hostname || s.Hostname == AppSetting.GlobalHostname)
+            .ToListAsync(cancellationToken);
 
-        _cache.Set(CacheKey, settings, CacheDuration);
-        return settings;
+        var result = new Dictionary<string, string>();
+
+        foreach (var setting in allSettings.Where(s => s.Hostname == AppSetting.GlobalHostname))
+            result[setting.Key] = setting.Value;
+
+        foreach (var setting in allSettings.Where(s => s.Hostname == _hostname))
+            result[setting.Key] = setting.Value;
+
+        _cache.Set(cacheKey, result, CacheDuration);
+        return result;
     }
 }

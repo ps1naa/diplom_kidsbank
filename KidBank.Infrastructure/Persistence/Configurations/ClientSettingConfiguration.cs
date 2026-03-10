@@ -4,13 +4,16 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace KidBank.Infrastructure.Persistence.Configurations;
 
-public class AppSettingConfiguration : IEntityTypeConfiguration<AppSetting>
+public class ClientSettingConfiguration : IEntityTypeConfiguration<ClientSetting>
 {
-    public void Configure(EntityTypeBuilder<AppSetting> builder)
+    public void Configure(EntityTypeBuilder<ClientSetting> builder)
     {
-        builder.ToTable("app_settings");
+        builder.ToTable("client_settings");
 
-        builder.HasKey(e => e.Key);
+        builder.HasKey(e => new { e.UserId, e.Key });
+
+        builder.Property(e => e.UserId)
+            .HasColumnName("user_id");
 
         builder.Property(e => e.Key)
             .HasColumnName("key")
@@ -18,14 +21,16 @@ public class AppSettingConfiguration : IEntityTypeConfiguration<AppSetting>
 
         builder.Property(e => e.Value)
             .HasColumnName("value")
+            .HasMaxLength(2000)
             .IsRequired();
-
-        builder.Property(e => e.Description)
-            .HasColumnName("description")
-            .HasMaxLength(500);
 
         builder.Property(e => e.UpdatedAt)
             .HasColumnName("updated_at")
             .IsRequired();
+
+        builder.HasOne(e => e.User)
+            .WithMany()
+            .HasForeignKey(e => e.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

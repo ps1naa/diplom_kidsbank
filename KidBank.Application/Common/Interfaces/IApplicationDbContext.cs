@@ -27,6 +27,6 @@ public interface IApplicationDbContext
     DbSet<Notification> Notifications { get; }
     DbSet<CategoryBlock> CategoryBlocks { get; }
     DbSet<AuditLog> AuditLogs { get; }
-    DbSet<AppSetting> AppSettings { get; }
+    DbSet<ClientSetting> ClientSettings { get; }
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }
