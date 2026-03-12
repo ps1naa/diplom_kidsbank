@@ -1286,6 +1286,12 @@ namespace KidBank.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(512)")
                         .HasColumnName("last_name");
 
+                    b.Property<string>("NormalizedEmailHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("normalized_email_hash");
+
                     b.Property<string>("PasswordHash")
                         .IsRequired()
                         .HasMaxLength(1024)
@@ -1308,12 +1314,12 @@ namespace KidBank.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Email")
-                        .IsUnique()
-                        .HasDatabaseName("ix_users_email");
-
                     b.HasIndex("FamilyId")
                         .HasDatabaseName("ix_users_family_id");
+
+                    b.HasIndex("NormalizedEmailHash")
+                        .IsUnique()
+                        .HasDatabaseName("ix_users_normalized_email_hash");
 
                     b.HasIndex("FamilyId", "Role")
                         .HasDatabaseName("ix_users_family_role");

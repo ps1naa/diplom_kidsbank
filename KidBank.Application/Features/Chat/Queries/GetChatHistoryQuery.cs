@@ -52,20 +52,21 @@ public class GetChatHistoryQueryHandler : IRequestHandler<GetChatHistoryQuery, R
 
         var totalCount = await query.CountAsync(cancellationToken);
 
-        var messages = await query
+        var entities = await query
             .OrderByDescending(m => m.CreatedAt)
             .Skip((request.PageNumber - 1) * request.PageSize)
             .Take(request.PageSize)
-            .Select(m => new ChatMessageDto(
-                m.Id,
-                m.SenderId,
-                m.Sender.FirstName + " " + m.Sender.LastName,
-                m.RecipientId,
-                m.Recipient != null ? m.Recipient.FirstName + " " + m.Recipient.LastName : null,
-                m.Content,
-                m.IsRead,
-                m.CreatedAt))
             .ToListAsync(cancellationToken);
+
+        var messages = entities.Select(m => new ChatMessageDto(
+            m.Id,
+            m.SenderId,
+            m.Sender.FirstName + " " + m.Sender.LastName,
+            m.RecipientId,
+            m.Recipient != null ? m.Recipient.FirstName + " " + m.Recipient.LastName : null,
+            m.Content,
+            m.IsRead,
+            m.CreatedAt)).ToList();
 
         messages.Reverse();
 

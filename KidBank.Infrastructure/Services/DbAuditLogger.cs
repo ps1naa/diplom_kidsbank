@@ -1,5 +1,6 @@
 using KidBank.Application.Common.Interfaces;
 using KidBank.Domain.Entities;
+using KidBank.Domain.Services;
 using KidBank.Infrastructure.Persistence;
 
 namespace KidBank.Infrastructure.Services;
@@ -27,7 +28,7 @@ public class DbAuditLogger : IAuditLogger
         long? elapsedMs = null,
         CancellationToken cancellationToken = default)
     {
-        var log = AuditLog.Create(
+        var log = AuditLogService.Create(
             level,
             message,
             exception,

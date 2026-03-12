@@ -1,6 +1,7 @@
 using FluentValidation;
 using KidBank.Application.Common.Interfaces;
 using KidBank.Application.Common.Models;
+using KidBank.Domain.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -56,7 +57,7 @@ public class GenerateKidInvitationCommandHandler : IRequestHandler<GenerateKidIn
             return Error.NotFound("Family", _currentUserService.FamilyId.Value);
         }
 
-        var invitation = family.CreateInvitation(TimeSpan.FromDays(request.ValidForDays));
+        var invitation = FamilyInvitationService.Create(family.Id, request.ValidForDays * 24);
         _context.FamilyInvitations.Add(invitation);
 
         await _context.SaveChangesAsync(cancellationToken);

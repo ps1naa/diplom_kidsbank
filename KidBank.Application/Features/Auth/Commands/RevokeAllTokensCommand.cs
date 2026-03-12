@@ -1,5 +1,6 @@
 using KidBank.Application.Common.Interfaces;
 using KidBank.Application.Common.Models;
+using KidBank.Domain.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -33,7 +34,7 @@ public class RevokeAllTokensCommandHandler : IRequestHandler<RevokeAllTokensComm
 
         foreach (var token in activeTokens)
         {
-            token.Revoke();
+            RefreshTokenService.Revoke(token);
         }
 
         await _context.SaveChangesAsync(cancellationToken);

@@ -10,7 +10,7 @@ public class LedgerService
         if (account == null)
             throw new ArgumentNullException(nameof(account));
 
-        var transaction = Transaction.CreateDeposit(
+        var transaction = TransactionService.CreateDeposit(
             account.Id,
             amount,
             account.Currency,
@@ -30,7 +30,7 @@ public class LedgerService
         if (account.Balance < amount)
             throw DomainException.InsufficientFunds();
 
-        var transaction = Transaction.CreateWithdrawal(
+        var transaction = TransactionService.CreateWithdrawal(
             account.Id,
             amount,
             account.Currency,
@@ -58,7 +58,7 @@ public class LedgerService
         if (sourceAccount.Balance < amount)
             throw DomainException.InsufficientFunds();
 
-        var transaction = Transaction.CreateTransfer(
+        var transaction = TransactionService.CreateTransfer(
             sourceAccount.Id,
             destinationAccount.Id,
             amount,
@@ -86,7 +86,7 @@ public class LedgerService
         if (parentAccount.Balance < amount)
             throw DomainException.InsufficientFunds();
 
-        var transaction = Transaction.CreateTaskReward(
+        var transaction = TransactionService.CreateTaskReward(
             parentAccount.Id,
             kidAccount.Id,
             amount,
@@ -114,7 +114,7 @@ public class LedgerService
         if (parentAccount.Balance < amount)
             throw DomainException.InsufficientFunds();
 
-        var transaction = Transaction.CreateMoneyRequestApproval(
+        var transaction = TransactionService.CreateMoneyRequestApproval(
             parentAccount.Id,
             kidAccount.Id,
             amount,
@@ -138,7 +138,7 @@ public class LedgerService
         if (sourceAccount.Balance < amount)
             throw DomainException.InsufficientFunds();
 
-        var transaction = Transaction.CreateGoalDeposit(
+        var transaction = TransactionService.CreateGoalDeposit(
             sourceAccount.Id,
             amount,
             sourceAccount.Currency,
@@ -158,7 +158,7 @@ public class LedgerService
         if (destinationAccount == null)
             throw new ArgumentNullException(nameof(destinationAccount));
 
-        var transaction = Transaction.CreateGoalWithdrawal(
+        var transaction = TransactionService.CreateGoalWithdrawal(
             destinationAccount.Id,
             amount,
             destinationAccount.Currency,

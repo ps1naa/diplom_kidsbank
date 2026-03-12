@@ -2,6 +2,7 @@ using FluentValidation;
 using KidBank.Application.Common.Interfaces;
 using KidBank.Application.Common.Models;
 using KidBank.Domain.Entities;
+using KidBank.Domain.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -67,45 +68,50 @@ public class RegisterParentCommandHandler : IRequestHandler<RegisterParentComman
 {
     private readonly IApplicationDbContext _context;
     private readonly IIdentityService _identityService;
+    private readonly IDataEncryptor _encryptor;
 
     public RegisterParentCommandHandler(
         IApplicationDbContext context,
-        IIdentityService identityService)
+        IIdentityService identityService,
+        IDataEncryptor encryptor)
     {
         _context = context;
         _identityService = identityService;
+        _encryptor = encryptor;
     }
 
     public async Task<Result<AuthResponse>> Handle(RegisterParentCommand request, CancellationToken cancellationToken)
     {
+        var emailHash = _encryptor.ComputeHash(request.Email.ToLowerInvariant());
         var emailExists = await _context.Users
-            .AnyAsync(u => u.Email == request.Email.ToLowerInvariant(), cancellationToken);
+            .AnyAsync(u => u.NormalizedEmailHash == emailHash, cancellationToken);
 
         if (emailExists)
         {
             return Error.Conflict("A user with this email already exists");
         }
 
-        var family = Family.Create(request.FamilyName);
+        var family = FamilyService.Create(request.FamilyName);
 
         var passwordHash = _identityService.HashPassword(request.Password);
 
-        var user = User.CreateParent(
+        var user = UserService.CreateParent(
             request.Email,
             passwordHash,
             request.FirstName,
             request.LastName,
             request.DateOfBirth,
-            family.Id);
+            family.Id,
+            emailHash);
 
-        var mainAccount = Account.CreateMain(user.Id);
+        var mainAccount = AccountService.CreateMain(user.Id);
 
         var (accessToken, jwtId) = _identityService.GenerateAccessToken(user);
 
-        var refreshToken = RefreshToken.Create(
+        var refreshToken = RefreshTokenService.Create(
             user.Id,
             jwtId,
-            TimeSpan.FromDays(30));
+            30);
 
         _context.Families.Add(family);
         _context.Users.Add(user);

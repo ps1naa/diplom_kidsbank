@@ -72,7 +72,7 @@ public class SubmitQuizCommandHandler : IRequestHandler<SubmitQuizCommand, Resul
             return Error.NotFound("User", _currentUserService.UserId.Value);
         }
 
-        var isCorrect = quiz.IsCorrectAnswer(request.SelectedOptionIndex);
+        var isCorrect = QuizService.IsCorrectAnswer(quiz, request.SelectedOptionIndex);
         var xpEarned = 0;
 
         if (isCorrect)
@@ -94,7 +94,7 @@ public class SubmitQuizCommandHandler : IRequestHandler<SubmitQuizCommand, Resul
             var totalQuizzes = await _context.Quizzes
                 .CountAsync(q => q.ModuleId == quiz.ModuleId, cancellationToken);
 
-            progress = EducationProgress.Create(
+            progress = EducationProgressService.Create(
                 _currentUserService.UserId.Value,
                 quiz.ModuleId,
                 totalQuizzes);
@@ -104,7 +104,7 @@ public class SubmitQuizCommandHandler : IRequestHandler<SubmitQuizCommand, Resul
 
         if (isCorrect)
         {
-            progress.RecordQuizCompletion(xpEarned);
+            EducationProgressService.RecordQuizCompletion(progress, xpEarned);
             moduleCompleted = progress.IsCompleted;
 
             if (moduleCompleted)

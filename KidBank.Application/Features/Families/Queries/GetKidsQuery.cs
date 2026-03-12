@@ -45,8 +45,11 @@ public class GetKidsQueryHandler : IRequestHandler<GetKidsQuery, Result<List<Kid
             return Error.InvalidOperation("User does not belong to a family");
         }
 
-        var kids = await _context.Users
+        var users = await _context.Users
             .Where(u => u.FamilyId == _currentUserService.FamilyId.Value && u.Role == UserRole.Kid && !u.IsDeleted)
+            .ToListAsync(cancellationToken);
+
+        var kids = users
             .Select(k => new KidDto(
                 k.Id,
                 k.Email,
@@ -58,7 +61,7 @@ public class GetKidsQueryHandler : IRequestHandler<GetKidsQuery, Result<List<Kid
                 k.TotalXp,
                 k.CurrentStreak,
                 k.CreatedAt))
-            .ToListAsync(cancellationToken);
+            .ToList();
 
         return kids;
     }

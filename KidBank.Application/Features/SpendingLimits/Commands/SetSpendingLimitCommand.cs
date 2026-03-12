@@ -96,7 +96,7 @@ public class SetSpendingLimitCommandHandler : IRequestHandler<SetSpendingLimitCo
         }
         else
         {
-            existingLimit = SpendingLimit.Create(
+            existingLimit = SpendingLimitHelper.Create(
                 request.KidId,
                 _currentUserService.UserId!.Value,
                 request.LimitAmount,

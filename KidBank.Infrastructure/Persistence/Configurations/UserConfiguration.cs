@@ -20,6 +20,11 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             .HasMaxLength(256)
             .IsRequired();
 
+        builder.Property(u => u.NormalizedEmailHash)
+            .HasColumnName("normalized_email_hash")
+            .HasMaxLength(64)
+            .IsRequired();
+
         builder.Property(u => u.PasswordHash)
             .HasColumnName("password_hash")
             .HasMaxLength(512)
@@ -78,9 +83,9 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             .HasForeignKey(u => u.FamilyId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasIndex(u => u.Email)
+        builder.HasIndex(u => u.NormalizedEmailHash)
             .IsUnique()
-            .HasDatabaseName("ix_users_email");
+            .HasDatabaseName("ix_users_normalized_email_hash");
 
         builder.HasIndex(u => u.FamilyId)
             .HasDatabaseName("ix_users_family_id");

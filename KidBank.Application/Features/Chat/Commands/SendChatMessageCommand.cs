@@ -2,6 +2,7 @@ using FluentValidation;
 using KidBank.Application.Common.Interfaces;
 using KidBank.Application.Common.Models;
 using KidBank.Domain.Entities;
+using KidBank.Domain.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -82,7 +83,7 @@ public class SendChatMessageCommandHandler : IRequestHandler<SendChatMessageComm
         ChatMessage message;
         if (request.RecipientId.HasValue)
         {
-            message = ChatMessage.CreateDirectMessage(
+            message = ChatMessageService.CreateDirectMessage(
                 _currentUserService.FamilyId.Value,
                 _currentUserService.UserId.Value,
                 request.RecipientId.Value,
@@ -90,7 +91,7 @@ public class SendChatMessageCommandHandler : IRequestHandler<SendChatMessageComm
         }
         else
         {
-            message = ChatMessage.CreateFamilyMessage(
+            message = ChatMessageService.CreateFamilyMessage(
                 _currentUserService.FamilyId.Value,
                 _currentUserService.UserId.Value,
                 request.Content);

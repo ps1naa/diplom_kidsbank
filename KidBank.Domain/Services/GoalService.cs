@@ -7,6 +7,30 @@ namespace KidBank.Domain.Services;
 
 public static class GoalService
 {
+    public static WishlistGoal Create(Guid userId, string title, decimal targetAmount, string currency = DefaultValues.DefaultCurrency, string? description = null, string? imageUrl = null, DateTime? targetDate = null)
+    {
+        if (string.IsNullOrWhiteSpace(title))
+            throw new ArgumentException(ValidationMessages.GoalTitleRequired, nameof(title));
+        if (targetAmount <= 0)
+            throw new ArgumentException(ValidationMessages.TargetAmountMustBePositive, nameof(targetAmount));
+
+        return new WishlistGoal
+        {
+            Id = Guid.NewGuid(),
+            UserId = userId,
+            Title = title,
+            Description = description,
+            ImageUrl = imageUrl,
+            TargetAmount = targetAmount,
+            CurrentAmount = 0,
+            Currency = currency.ToUpperInvariant(),
+            TargetDate = targetDate,
+            Status = GoalStatus.Active,
+            CreatedAt = DateTime.UtcNow,
+            Version = 1
+        };
+    }
+
     public static void Update(WishlistGoal goal, string title, string? description, string? imageUrl, decimal targetAmount, DateTime? targetDate)
     {
         if (goal.Status != GoalStatus.Active)

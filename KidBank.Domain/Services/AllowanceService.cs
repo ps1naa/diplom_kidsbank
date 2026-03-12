@@ -1,9 +1,36 @@
+using KidBank.Domain.Constants;
 using KidBank.Domain.Entities;
 
 namespace KidBank.Domain.Services;
 
 public static class AllowanceService
 {
+    public static RecurringAllowance Create(
+        Guid parentId,
+        Guid kidId,
+        decimal amount,
+        string currency = DefaultValues.DefaultCurrency,
+        string frequency = "Weekly",
+        int dayOfWeek = 1,
+        int dayOfMonth = 1)
+    {
+        var allowance = new RecurringAllowance
+        {
+            Id = Guid.NewGuid(),
+            ParentId = parentId,
+            KidId = kidId,
+            Amount = amount,
+            Currency = currency,
+            Frequency = frequency,
+            DayOfWeek = dayOfWeek,
+            DayOfMonth = dayOfMonth,
+            IsActive = true,
+            CreatedAt = DateTime.UtcNow
+        };
+        allowance.NextPaymentDate = CalculateNextPaymentDate(allowance.Frequency, allowance.DayOfWeek, allowance.DayOfMonth);
+        return allowance;
+    }
+
     public static void Update(RecurringAllowance allowance, decimal amount, string frequency, int dayOfWeek, int dayOfMonth)
     {
         allowance.Amount = amount;

@@ -7,6 +7,35 @@ namespace KidBank.Domain.Services;
 
 public static class SpendingLimitHelper
 {
+    public static SpendingLimit Create(
+        Guid kidId,
+        Guid setById,
+        decimal limitAmount,
+        SpendingLimitPeriod period,
+        string currency = Constants.DefaultValues.DefaultCurrency)
+    {
+        if (limitAmount <= 0)
+            throw new ArgumentException(ValidationMessages.AmountMustBePositive, nameof(limitAmount));
+
+        var (startDate, endDate) = Helpers.SpendingLimitPeriodCalculator.Calculate(period, DateTime.UtcNow);
+
+        return new SpendingLimit
+        {
+            Id = Guid.NewGuid(),
+            KidId = kidId,
+            SetById = setById,
+            LimitAmount = limitAmount,
+            SpentAmount = 0,
+            Currency = currency.ToUpperInvariant(),
+            Period = period,
+            PeriodStartDate = startDate,
+            PeriodEndDate = endDate,
+            IsActive = true,
+            CreatedAt = DateTime.UtcNow,
+            Version = 1
+        };
+    }
+
     public static void RefreshPeriodIfNeeded(SpendingLimit limit)
     {
         if (DateTime.UtcNow <= limit.PeriodEndDate) return;

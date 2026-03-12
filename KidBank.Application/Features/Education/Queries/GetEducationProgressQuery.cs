@@ -1,5 +1,6 @@
 using KidBank.Application.Common.Interfaces;
 using KidBank.Application.Common.Models;
+using KidBank.Domain.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -73,7 +74,7 @@ public class GetEducationProgressQueryHandler : IRequestHandler<GetEducationProg
                 progress?.IsCompleted ?? false,
                 progress?.QuizzesCompleted ?? 0,
                 m.Quizzes.Count,
-                progress?.GetProgressPercentage() ?? 0,
+                progress != null ? EducationProgressService.GetProgressPercentage(progress) : 0,
                 progress?.TotalXpEarned ?? 0);
         }).ToList();
 

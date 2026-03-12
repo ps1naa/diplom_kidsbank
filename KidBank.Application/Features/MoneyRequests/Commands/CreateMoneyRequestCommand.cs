@@ -3,6 +3,7 @@ using KidBank.Application.Common.Interfaces;
 using KidBank.Application.Common.Models;
 using KidBank.Domain.Entities;
 using KidBank.Domain.Enums;
+using KidBank.Domain.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -75,7 +76,7 @@ public class CreateMoneyRequestCommandHandler : IRequestHandler<CreateMoneyReque
             return Error.NotFound("No parent found in family");
         }
 
-        var moneyRequest = MoneyRequest.Create(
+        var moneyRequest = MoneyRequestService.Create(
             kid.Id,
             parent.Id,
             request.Amount,

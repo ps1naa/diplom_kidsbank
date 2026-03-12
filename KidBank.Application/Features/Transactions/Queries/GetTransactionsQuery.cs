@@ -82,10 +82,13 @@ public class GetTransactionsQueryHandler : IRequestHandler<GetTransactionsQuery,
 
         var totalCount = await query.CountAsync(cancellationToken);
 
-        var transactions = await query
+        var entities = await query
             .OrderByDescending(t => t.CreatedAt)
             .Skip((request.PageNumber - 1) * request.PageSize)
             .Take(request.PageSize)
+            .ToListAsync(cancellationToken);
+
+        var transactions = entities
             .Select(t => new TransactionDto(
                 t.Id,
                 t.SourceAccountId,
@@ -97,7 +100,7 @@ public class GetTransactionsQueryHandler : IRequestHandler<GetTransactionsQuery,
                 t.RelatedEntityId,
                 t.RelatedEntityType,
                 t.CreatedAt))
-            .ToListAsync(cancellationToken);
+            .ToList();
 
         return new PaginatedList<TransactionDto>(transactions, totalCount, request.PageNumber, request.PageSize);
     }

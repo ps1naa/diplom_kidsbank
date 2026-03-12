@@ -9,7 +9,7 @@ public class AppSettingServiceTests
     [Fact]
     public void Update_ChangesValueAndTimestamp()
     {
-        var setting = AppSetting.Create("key", "old_value", "*");
+        var setting = AppSettingService.Create("key", "old_value", "*");
         var originalTimestamp = setting.UpdatedAt;
 
         AppSettingService.Update(setting, "new_value");
@@ -21,7 +21,7 @@ public class AppSettingServiceTests
     [Fact]
     public void Update_WithDescription_ChangesDescription()
     {
-        var setting = AppSetting.Create("key", "value", "*", "old desc");
+        var setting = AppSettingService.Create("key", "value", "*", "old desc");
 
         AppSettingService.Update(setting, "new_value", "new desc");
 
@@ -31,7 +31,7 @@ public class AppSettingServiceTests
     [Fact]
     public void Update_WithNullDescription_KeepsExistingDescription()
     {
-        var setting = AppSetting.Create("key", "value", "*", "existing desc");
+        var setting = AppSettingService.Create("key", "value", "*", "existing desc");
 
         AppSettingService.Update(setting, "new_value");
 

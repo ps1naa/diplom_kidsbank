@@ -1,5 +1,6 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using KidBank.Application.Common.Interfaces;
 using KidBank.Application.Features.Chat.Commands;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -11,12 +12,12 @@ namespace KidBank.API.Hubs;
 public class ChatHub : Hub
 {
     private readonly ISender _mediator;
-    private readonly ILogger<ChatHub> _logger;
+    private readonly IAuditLogger _auditLogger;
 
-    public ChatHub(ISender mediator, ILogger<ChatHub> logger)
+    public ChatHub(ISender mediator, IAuditLogger auditLogger)
     {
         _mediator = mediator;
-        _logger = logger;
+        _auditLogger = auditLogger;
     }
 
     public override async Task OnConnectedAsync()
@@ -25,7 +26,7 @@ public class ChatHub : Hub
         if (familyId.HasValue)
         {
             await Groups.AddToGroupAsync(Context.ConnectionId, $"family_{familyId}");
-            _logger.LogInformation("User {UserId} connected to family {FamilyId}", GetUserId(), familyId);
+            await _auditLogger.LogInfoAsync($"User {GetUserId()} connected to family {familyId}");
         }
         await base.OnConnectedAsync();
     }
@@ -36,7 +37,7 @@ public class ChatHub : Hub
         if (familyId.HasValue)
         {
             await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"family_{familyId}");
-            _logger.LogInformation("User {UserId} disconnected from family {FamilyId}", GetUserId(), familyId);
+            await _auditLogger.LogInfoAsync($"User {GetUserId()} disconnected from family {familyId}");
         }
         await base.OnDisconnectedAsync(exception);
     }

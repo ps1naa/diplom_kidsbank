@@ -2,6 +2,7 @@ using FluentValidation;
 using KidBank.Application.Common.Interfaces;
 using KidBank.Application.Common.Models;
 using KidBank.Domain.Entities;
+using KidBank.Domain.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -74,12 +75,12 @@ public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, R
 
         var (newAccessToken, newJwtId) = _identityService.GenerateAccessToken(user);
 
-        var newRefreshToken = RefreshToken.Create(
+        var newRefreshToken = RefreshTokenService.Create(
             user.Id,
             newJwtId,
-            TimeSpan.FromDays(30));
+            30);
 
-        storedToken.Revoke(newRefreshToken.Token);
+        RefreshTokenService.Revoke(storedToken, newRefreshToken.Token);
 
         _context.RefreshTokens.Add(newRefreshToken);
         await _context.SaveChangesAsync(cancellationToken);

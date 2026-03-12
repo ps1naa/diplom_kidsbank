@@ -1,5 +1,4 @@
 using FluentAssertions;
-using KidBank.Application.Common.Interfaces;
 using KidBank.Domain.Entities;
 using KidBank.Domain.Services;
 using KidBank.Infrastructure.Persistence;
@@ -7,6 +6,7 @@ using KidBank.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Moq;
+using StackExchange.Redis;
 
 namespace KidBank.Infrastructure.Tests.Services;
 
@@ -14,7 +14,7 @@ public class DbAppSettingsServiceTests : IDisposable
 {
     private readonly SettingsDbContext _context;
     private readonly IMemoryCache _cache;
-    private readonly Mock<ISettingsNotifier> _notifierMock;
+    private readonly Mock<RedisSettingsNotifier> _notifierMock;
     private readonly DbAppSettingsService _service;
 
     public DbAppSettingsServiceTests()
@@ -25,7 +25,7 @@ public class DbAppSettingsServiceTests : IDisposable
 
         _context = new SettingsDbContext(options);
         _cache = new MemoryCache(new MemoryCacheOptions());
-        _notifierMock = new Mock<ISettingsNotifier>();
+        _notifierMock = new Mock<RedisSettingsNotifier>(Mock.Of<IConnectionMultiplexer>());
         _service = new DbAppSettingsService(_context, _cache, _notifierMock.Object);
     }
 
@@ -66,7 +66,7 @@ public class DbAppSettingsServiceTests : IDisposable
     public async Task GetAsync_HostSpecificSetting_ReturnsHostValue()
     {
         var hostname = Environment.MachineName;
-        _context.AppSettings.Add(AppSetting.Create("key1", "host_value", hostname));
+        _context.AppSettings.Add(AppSettingService.Create("key1", "host_value", hostname));
         await _context.SaveChangesAsync();
 
         var result = await _service.GetAsync("key1");
@@ -77,7 +77,7 @@ public class DbAppSettingsServiceTests : IDisposable
     [Fact]
     public async Task GetAsync_GlobalFallback_ReturnsGlobalWhenNoHostSpecific()
     {
-        _context.AppSettings.Add(AppSetting.Create("key1", "global_value", AppSetting.GlobalHostname));
+        _context.AppSettings.Add(AppSettingService.Create("key1", "global_value", AppSetting.GlobalHostname));
         await _context.SaveChangesAsync();
 
         var result = await _service.GetAsync("key1");
@@ -89,8 +89,8 @@ public class DbAppSettingsServiceTests : IDisposable
     public async Task GetAsync_HostOverridesGlobal()
     {
         var hostname = Environment.MachineName;
-        _context.AppSettings.Add(AppSetting.Create("key1", "global_value", AppSetting.GlobalHostname));
-        _context.AppSettings.Add(AppSetting.Create("key1", "host_value", hostname));
+        _context.AppSettings.Add(AppSettingService.Create("key1", "global_value", AppSetting.GlobalHostname));
+        _context.AppSettings.Add(AppSettingService.Create("key1", "host_value", hostname));
         await _context.SaveChangesAsync();
 
         var result = await _service.GetAsync("key1");
@@ -109,7 +109,7 @@ public class DbAppSettingsServiceTests : IDisposable
     [Fact]
     public async Task GetAsync_Generic_ConvertsToType()
     {
-        _context.AppSettings.Add(AppSetting.Create("max_retries", "5", Environment.MachineName));
+        _context.AppSettings.Add(AppSettingService.Create("max_retries", "5", Environment.MachineName));
         await _context.SaveChangesAsync();
 
         var result = await _service.GetAsync<int>("max_retries");
@@ -120,7 +120,7 @@ public class DbAppSettingsServiceTests : IDisposable
     [Fact]
     public async Task GetAsync_Generic_InvalidConversion_ReturnsNull()
     {
-        _context.AppSettings.Add(AppSetting.Create("key1", "not_a_number", Environment.MachineName));
+        _context.AppSettings.Add(AppSettingService.Create("key1", "not_a_number", Environment.MachineName));
         await _context.SaveChangesAsync();
 
         var result = await _service.GetAsync<int>("key1");
@@ -132,10 +132,10 @@ public class DbAppSettingsServiceTests : IDisposable
     public async Task GetAllAsync_ReturnsMergedSettings()
     {
         var hostname = Environment.MachineName;
-        _context.AppSettings.Add(AppSetting.Create("global_key", "global_val", AppSetting.GlobalHostname));
-        _context.AppSettings.Add(AppSetting.Create("host_key", "host_val", hostname));
-        _context.AppSettings.Add(AppSetting.Create("shared_key", "global_shared", AppSetting.GlobalHostname));
-        _context.AppSettings.Add(AppSetting.Create("shared_key", "host_shared", hostname));
+        _context.AppSettings.Add(AppSettingService.Create("global_key", "global_val", AppSetting.GlobalHostname));
+        _context.AppSettings.Add(AppSettingService.Create("host_key", "host_val", hostname));
+        _context.AppSettings.Add(AppSettingService.Create("shared_key", "global_shared", AppSetting.GlobalHostname));
+        _context.AppSettings.Add(AppSettingService.Create("shared_key", "host_shared", hostname));
         await _context.SaveChangesAsync();
 
         var all = await _service.GetAllAsync();
@@ -149,7 +149,7 @@ public class DbAppSettingsServiceTests : IDisposable
     [Fact]
     public async Task RefreshCacheAsync_InvalidatesCache()
     {
-        _context.AppSettings.Add(AppSetting.Create("key1", "old", Environment.MachineName));
+        _context.AppSettings.Add(AppSettingService.Create("key1", "old", Environment.MachineName));
         await _context.SaveChangesAsync();
 
         _ = await _service.GetAsync("key1");

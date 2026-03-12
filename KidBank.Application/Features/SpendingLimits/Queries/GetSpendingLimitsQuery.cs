@@ -45,6 +45,9 @@ public class GetSpendingLimitsQueryHandler : IRequestHandler<GetSpendingLimitsQu
         var limits = await _context.SpendingLimits
             .Include(sl => sl.Kid)
             .Where(sl => sl.KidId == request.KidId && sl.IsActive)
+            .ToListAsync(cancellationToken);
+
+        return limits
             .Select(sl => new SpendingLimitDto(
                 sl.Id,
                 sl.KidId,
@@ -57,8 +60,6 @@ public class GetSpendingLimitsQueryHandler : IRequestHandler<GetSpendingLimitsQu
                 sl.PeriodStartDate,
                 sl.PeriodEndDate,
                 sl.IsActive))
-            .ToListAsync(cancellationToken);
-
-        return limits;
+            .ToList();
     }
 }

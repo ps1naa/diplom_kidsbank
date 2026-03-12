@@ -77,7 +77,7 @@ public class SetAllowanceCommandHandler : IRequestHandler<SetAllowanceCommand, R
         }
         else
         {
-            existingAllowance = RecurringAllowance.Create(
+            existingAllowance = AllowanceService.Create(
                 _currentUserService.UserId!.Value,
                 request.KidId,
                 request.Amount,

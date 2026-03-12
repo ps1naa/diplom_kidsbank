@@ -1,5 +1,6 @@
 using FluentAssertions;
 using KidBank.Domain.Entities;
+using KidBank.Domain.Services;
 
 namespace KidBank.Domain.Tests.Entities;
 
@@ -9,7 +10,7 @@ public class ClientSettingTests
     public void Create_WithValidArgs_ReturnsClientSetting()
     {
         var userId = Guid.NewGuid();
-        var setting = ClientSetting.Create(userId, "theme", "dark");
+        var setting = ClientSettingService.Create(userId, "theme", "dark");
 
         setting.UserId.Should().Be(userId);
         setting.Key.Should().Be("theme");
@@ -23,7 +24,7 @@ public class ClientSettingTests
     [InlineData("   ")]
     public void Create_WithEmptyKey_ThrowsArgumentException(string? key)
     {
-        var act = () => ClientSetting.Create(Guid.NewGuid(), key!, "value");
+        var act = () => ClientSettingService.Create(Guid.NewGuid(), key!, "value");
 
         act.Should().Throw<ArgumentException>().WithParameterName("key");
     }

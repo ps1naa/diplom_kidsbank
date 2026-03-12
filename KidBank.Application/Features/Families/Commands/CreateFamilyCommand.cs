@@ -2,6 +2,7 @@ using FluentValidation;
 using KidBank.Application.Common.Interfaces;
 using KidBank.Application.Common.Models;
 using KidBank.Domain.Entities;
+using KidBank.Domain.Services;
 using MediatR;
 
 namespace KidBank.Application.Features.Families.Commands;
@@ -43,7 +44,7 @@ public class CreateFamilyCommandHandler : IRequestHandler<CreateFamilyCommand, R
             return Error.Forbidden("Only parents can create families");
         }
 
-        var family = Family.Create(request.Name);
+        var family = FamilyService.Create(request.Name);
 
         _context.Families.Add(family);
         await _context.SaveChangesAsync(cancellationToken);

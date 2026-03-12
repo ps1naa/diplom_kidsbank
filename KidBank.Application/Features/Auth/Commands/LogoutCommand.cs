@@ -1,6 +1,7 @@
 using FluentValidation;
 using KidBank.Application.Common.Interfaces;
 using KidBank.Application.Common.Models;
+using KidBank.Domain.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -33,7 +34,7 @@ public class LogoutCommandHandler : IRequestHandler<LogoutCommand, Result>
 
         if (token != null && token.IsActive)
         {
-            token.Revoke();
+            RefreshTokenService.Revoke(token);
             await _context.SaveChangesAsync(cancellationToken);
         }
 

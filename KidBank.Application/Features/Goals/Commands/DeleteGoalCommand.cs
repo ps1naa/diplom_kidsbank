@@ -23,13 +23,16 @@ public class DeleteGoalCommandHandler : IRequestHandler<DeleteGoalCommand, Resul
 {
     private readonly IApplicationDbContext _context;
     private readonly IIdentityService _currentUserService;
+    private readonly LedgerService _ledgerService;
 
     public DeleteGoalCommandHandler(
         IApplicationDbContext context,
-        IIdentityService currentUserService)
+        IIdentityService currentUserService,
+        LedgerService ledgerService)
     {
         _context = context;
         _currentUserService = currentUserService;
+        _ledgerService = ledgerService;
     }
 
     public async Task<Result> Handle(DeleteGoalCommand request, CancellationToken cancellationToken)
@@ -59,7 +62,14 @@ public class DeleteGoalCommandHandler : IRequestHandler<DeleteGoalCommand, Resul
 
         if (goal.CurrentAmount > 0)
         {
-            return Error.InvalidOperation("Cannot delete goal with accumulated funds. Withdraw funds first.");
+            var mainAccount = await _context.Accounts
+                .FirstOrDefaultAsync(a => a.UserId == goal.UserId && a.Type == AccountType.Main, cancellationToken);
+
+            if (mainAccount == null)
+                return Error.NotFound("Main account not found");
+
+            var tx = _ledgerService.WithdrawFromGoal(goal, mainAccount, goal.CurrentAmount);
+            _context.Transactions.Add(tx);
         }
 
         GoalService.Cancel(goal);

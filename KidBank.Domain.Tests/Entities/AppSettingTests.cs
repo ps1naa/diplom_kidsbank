@@ -1,5 +1,6 @@
 using FluentAssertions;
 using KidBank.Domain.Entities;
+using KidBank.Domain.Services;
 
 namespace KidBank.Domain.Tests.Entities;
 
@@ -8,7 +9,7 @@ public class AppSettingTests
     [Fact]
     public void Create_WithValidArgs_ReturnsAppSetting()
     {
-        var setting = AppSetting.Create("jwt:secret", "value123", "host1", "JWT secret key");
+        var setting = AppSettingService.Create("jwt:secret", "value123", "host1", "JWT secret key");
 
         setting.Key.Should().Be("jwt:secret");
         setting.Value.Should().Be("value123");
@@ -20,7 +21,7 @@ public class AppSettingTests
     [Fact]
     public void Create_WithGlobalHostname_SetsAsterisk()
     {
-        var setting = AppSetting.Create("key1", "val1", AppSetting.GlobalHostname);
+        var setting = AppSettingService.Create("key1", "val1", AppSetting.GlobalHostname);
 
         setting.Hostname.Should().Be("*");
     }
@@ -31,7 +32,7 @@ public class AppSettingTests
     [InlineData("   ")]
     public void Create_WithEmptyKey_ThrowsArgumentException(string? key)
     {
-        var act = () => AppSetting.Create(key!, "value", "host");
+        var act = () => AppSettingService.Create(key!, "value", "host");
 
         act.Should().Throw<ArgumentException>().WithParameterName("key");
     }
@@ -42,7 +43,7 @@ public class AppSettingTests
     [InlineData("   ")]
     public void Create_WithEmptyHostname_ThrowsArgumentException(string? hostname)
     {
-        var act = () => AppSetting.Create("key", "value", hostname!);
+        var act = () => AppSettingService.Create("key", "value", hostname!);
 
         act.Should().Throw<ArgumentException>().WithParameterName("hostname");
     }

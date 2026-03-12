@@ -1,5 +1,6 @@
 using KidBank.Application.Common.Interfaces;
 using KidBank.Application.Common.Models;
+using KidBank.Domain.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -68,7 +69,7 @@ public class GetLessonsQueryHandler : IRequestHandler<GetLessonsQuery, Result<Li
             m.Module.XpReward,
             m.QuizCount,
             m.Progress?.IsCompleted ?? false,
-            m.Progress?.GetProgressPercentage() ?? 0))
+            m.Progress != null ? EducationProgressService.GetProgressPercentage(m.Progress) : 0))
             .ToList();
 
         return lessons;

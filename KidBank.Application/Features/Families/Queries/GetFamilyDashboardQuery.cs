@@ -65,8 +65,14 @@ public class GetFamilyDashboardQueryHandler : IRequestHandler<GetFamilyDashboard
 
         var weekStart = DateTime.UtcNow.Date.AddDays(-(int)DateTime.UtcNow.DayOfWeek + (int)DayOfWeek.Monday);
 
-        var kids = await _context.Users
+        var users = await _context.Users
+            .Include(u => u.Accounts)
+            .Include(u => u.WishlistGoals)
+            .Include(u => u.AssignedTasks)
             .Where(u => u.FamilyId == familyId && u.Role == UserRole.Kid && !u.IsDeleted)
+            .ToListAsync(cancellationToken);
+
+        var kids = users
             .Select(k => new KidSummaryDto(
                 k.Id,
                 k.FirstName,
@@ -78,7 +84,7 @@ public class GetFamilyDashboardQueryHandler : IRequestHandler<GetFamilyDashboard
                 k.AssignedTasks.Count(t => t.Status == TaskAssignmentStatus.Approved && t.ApprovedAt >= weekStart),
                 k.CurrentStreak,
                 k.TotalXp))
-            .ToListAsync(cancellationToken);
+            .ToList();
 
         var totalPendingTasks = await _context.TaskAssignments
             .CountAsync(t => t.AssignedTo.FamilyId == familyId && t.Status == TaskAssignmentStatus.Completed, cancellationToken);

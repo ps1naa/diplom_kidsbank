@@ -29,25 +29,26 @@ public class GetPendingMoneyRequestsQueryHandler : IRequestHandler<GetPendingMon
             return Error.Forbidden("Only parents can view pending money requests");
         }
 
-        var requests = await _context.MoneyRequests
+        var entities = await _context.MoneyRequests
             .Include(mr => mr.Kid)
             .Include(mr => mr.Parent)
             .Where(mr => mr.ParentId == _currentUserService.UserId!.Value && mr.Status == MoneyRequestStatus.Pending)
             .OrderByDescending(mr => mr.CreatedAt)
-            .Select(mr => new MoneyRequestDto(
-                mr.Id,
-                mr.KidId,
-                mr.Kid.FirstName + " " + mr.Kid.LastName,
-                mr.ParentId,
-                mr.Parent.FirstName + " " + mr.Parent.LastName,
-                mr.Amount,
-                mr.Currency,
-                mr.Reason,
-                mr.Status.ToString(),
-                mr.ResponseNote,
-                mr.CreatedAt,
-                mr.RespondedAt))
             .ToListAsync(cancellationToken);
+
+        var requests = entities.Select(mr => new MoneyRequestDto(
+            mr.Id,
+            mr.KidId,
+            mr.Kid.FirstName + " " + mr.Kid.LastName,
+            mr.ParentId,
+            mr.Parent.FirstName + " " + mr.Parent.LastName,
+            mr.Amount,
+            mr.Currency,
+            mr.Reason,
+            mr.Status.ToString(),
+            mr.ResponseNote,
+            mr.CreatedAt,
+            mr.RespondedAt)).ToList();
 
         return requests;
     }

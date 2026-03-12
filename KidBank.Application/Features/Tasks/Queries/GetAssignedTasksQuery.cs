@@ -39,26 +39,27 @@ public class GetAssignedTasksQueryHandler : IRequestHandler<GetAssignedTasksQuer
             query = query.Where(t => t.Status == status);
         }
 
-        var tasks = await query
+        var entities = await query
             .OrderByDescending(t => t.CreatedAt)
-            .Select(t => new TaskDto(
-                t.Id,
-                t.AssignedToId,
-                t.AssignedTo.FirstName + " " + t.AssignedTo.LastName,
-                t.CreatedById,
-                t.CreatedBy.FirstName + " " + t.CreatedBy.LastName,
-                t.Title,
-                t.Description,
-                t.RewardAmount,
-                t.Currency,
-                t.DueDate,
-                t.Status.ToString(),
-                t.ProofUrl,
-                t.RejectionReason,
-                t.CreatedAt,
-                t.CompletedAt,
-                t.ApprovedAt))
             .ToListAsync(cancellationToken);
+
+        var tasks = entities.Select(t => new TaskDto(
+            t.Id,
+            t.AssignedToId,
+            t.AssignedTo.FirstName + " " + t.AssignedTo.LastName,
+            t.CreatedById,
+            t.CreatedBy.FirstName + " " + t.CreatedBy.LastName,
+            t.Title,
+            t.Description,
+            t.RewardAmount,
+            t.Currency,
+            t.DueDate,
+            t.Status.ToString(),
+            t.ProofUrl,
+            t.RejectionReason,
+            t.CreatedAt,
+            t.CompletedAt,
+            t.ApprovedAt)).ToList();
 
         return tasks;
     }

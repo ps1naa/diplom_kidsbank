@@ -26,10 +26,13 @@ public class GetMyCardsQueryHandler : IRequestHandler<GetMyCardsQuery, Result<Li
         if (!_currentUserService.UserId.HasValue)
             return Error.Unauthorized();
 
-        var cards = await _context.VirtualCards
+        var entities = await _context.VirtualCards
             .Include(c => c.Account)
             .Where(c => c.Account.UserId == _currentUserService.UserId.Value && c.IsActive)
             .OrderByDescending(c => c.CreatedAt)
+            .ToListAsync(cancellationToken);
+
+        var cards = entities
             .Select(c => new VirtualCardDto(
                 c.Id,
                 c.MaskedCardNumber,
@@ -40,7 +43,7 @@ public class GetMyCardsQueryHandler : IRequestHandler<GetMyCardsQuery, Result<Li
                 c.DailyLimit,
                 c.MonthlyLimit,
                 c.CreatedAt))
-            .ToListAsync(cancellationToken);
+            .ToList();
 
         return cards;
     }

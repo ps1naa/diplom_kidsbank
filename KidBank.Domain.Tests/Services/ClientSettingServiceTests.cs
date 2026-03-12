@@ -9,7 +9,7 @@ public class ClientSettingServiceTests
     [Fact]
     public void Update_ChangesValueAndTimestamp()
     {
-        var setting = ClientSetting.Create(Guid.NewGuid(), "theme", "light");
+        var setting = ClientSettingService.Create(Guid.NewGuid(), "theme", "light");
         var originalTimestamp = setting.UpdatedAt;
 
         ClientSettingService.Update(setting, "dark");

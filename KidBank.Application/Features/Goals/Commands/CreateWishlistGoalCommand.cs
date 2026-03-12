@@ -65,7 +65,7 @@ public class CreateWishlistGoalCommandHandler : IRequestHandler<CreateWishlistGo
             return Error.Unauthorized();
         }
 
-        var goal = WishlistGoal.Create(
+        var goal = GoalService.Create(
             _currentUserService.UserId.Value,
             request.Title,
             request.TargetAmount,

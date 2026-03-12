@@ -1,9 +1,50 @@
 using KidBank.Domain.Entities;
+using KidBank.Domain.Enums;
 
 namespace KidBank.Domain.Services;
 
 public static class UserService
 {
+    public static User CreateParent(string email, string passwordHash, string firstName, string lastName, DateTime dateOfBirth, Guid familyId, string normalizedEmailHash)
+    {
+        return new User
+        {
+            Id = Guid.NewGuid(),
+            Email = email.ToLowerInvariant(),
+            NormalizedEmailHash = normalizedEmailHash,
+            PasswordHash = passwordHash,
+            FirstName = firstName,
+            LastName = lastName,
+            Role = UserRole.Parent,
+            FamilyId = familyId,
+            DateOfBirth = DateTime.SpecifyKind(dateOfBirth, DateTimeKind.Utc),
+            TotalXp = 0,
+            CurrentStreak = 0,
+            IsDeleted = false,
+            CreatedAt = DateTime.UtcNow
+        };
+    }
+
+    public static User CreateKid(string email, string passwordHash, string firstName, string lastName, DateTime dateOfBirth, Guid familyId, string normalizedEmailHash)
+    {
+        return new User
+        {
+            Id = Guid.NewGuid(),
+            Email = email.ToLowerInvariant(),
+            NormalizedEmailHash = normalizedEmailHash,
+            PasswordHash = passwordHash,
+            FirstName = firstName,
+            LastName = lastName,
+            Role = UserRole.Kid,
+            FamilyId = familyId,
+            DateOfBirth = DateTime.SpecifyKind(dateOfBirth, DateTimeKind.Utc),
+            TotalXp = 0,
+            CurrentStreak = 0,
+            IsDeleted = false,
+            CreatedAt = DateTime.UtcNow
+        };
+    }
+
     public static void UpdateProfile(User user, string firstName, string lastName, string? avatarUrl)
     {
         user.FirstName = firstName;

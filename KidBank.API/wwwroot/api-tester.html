@@ -324,7 +324,7 @@
             
             <div class="input-group">
                 <label>API URL:</label>
-                <input type="text" id="baseUrl" value="http://localhost:5000/api/v1">
+                <input type="text" id="baseUrl" value="" placeholder="http://localhost:5100/api/v1">
             </div>
             
             <div class="btn-row">
@@ -810,10 +810,24 @@
         let passedCount = 0;
         let failedCount = 0;
 
+        (function initBaseUrl() {
+            const el = document.getElementById('baseUrl');
+            if (!el) return;
+            const current = el.value.trim();
+            if (current) return;
+            el.value = (window.location.origin && window.location.origin.startsWith('http'))
+                ? (window.location.origin + '/api/v1')
+                : 'http://localhost:5100/api/v1';
+        })();
         updateTokenDisplay();
 
         function getBaseUrl() {
-            return document.getElementById('baseUrl').value;
+            const el = document.getElementById('baseUrl');
+            const url = el ? el.value.trim() : '';
+            if (url) return url.replace(/\/+$/, '');
+            if (window.location.origin && window.location.origin.startsWith('http'))
+                return window.location.origin + '/api/v1';
+            return 'http://localhost:5100/api/v1';
         }
 
         function toggleSection(header) {

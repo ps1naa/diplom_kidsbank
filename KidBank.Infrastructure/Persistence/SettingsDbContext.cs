@@ -1,18 +1,13 @@
-using KidBank.Application.Common.Interfaces;
 using KidBank.Domain.Entities;
-using KidBank.Infrastructure.Persistence.Converters;
 using Microsoft.EntityFrameworkCore;
 
 namespace KidBank.Infrastructure.Persistence;
 
 public class SettingsDbContext : DbContext
 {
-    private readonly IDataEncryptor? _encryptor;
-
-    public SettingsDbContext(DbContextOptions<SettingsDbContext> options, IDataEncryptor? encryptor = null) 
+    public SettingsDbContext(DbContextOptions<SettingsDbContext> options) 
         : base(options)
     {
-        _encryptor = encryptor;
     }
 
     public DbSet<AppSetting> AppSettings => Set<AppSetting>();
@@ -46,12 +41,6 @@ public class SettingsDbContext : DbContext
             builder.Property(e => e.UpdatedAt)
                 .HasColumnName("updated_at")
                 .IsRequired();
-
-            if (_encryptor != null)
-            {
-                var converter = new EncryptedStringConverter(_encryptor);
-                builder.Property(e => e.Value).HasConversion(converter).HasMaxLength(4000);
-            }
         });
     }
 }

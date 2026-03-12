@@ -1,8 +1,8 @@
 using KidBank.Application.Common.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
+
 
 namespace KidBank.Infrastructure.Services;
 
@@ -10,17 +10,14 @@ public class RedisSettingsListener : BackgroundService
 {
     private readonly IConnectionMultiplexer _redis;
     private readonly IServiceScopeFactory _scopeFactory;
-    private readonly ILogger<RedisSettingsListener> _logger;
     private const string Channel = "settings_changed";
 
     public RedisSettingsListener(
         IConnectionMultiplexer redis,
-        IServiceScopeFactory scopeFactory,
-        ILogger<RedisSettingsListener> logger)
+        IServiceScopeFactory scopeFactory)
     {
         _redis = redis;
         _scopeFactory = scopeFactory;
-        _logger = logger;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -32,16 +29,27 @@ public class RedisSettingsListener : BackgroundService
             try
             {
                 using var scope = _scopeFactory.CreateScope();
-                var settingsService = scope.ServiceProvider.GetRequiredService<IAppSettingsService>();
+                var settingsService = scope.ServiceProvider.GetRequiredService<DbAppSettingsService>();
                 await settingsService.RefreshCacheAsync(stoppingToken);
 
-                _logger.LogInformation(
-                    "Settings cache invalidated due to change from {Source}",
-                    message.ToString());
+                var auditLogger = scope.ServiceProvider.GetRequiredService<IAuditLogger>();
+                await auditLogger.LogInfoAsync(
+                    $"Settings cache invalidated due to change from {message}");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to refresh settings cache after Redis notification");
+                try
+                {
+                    using var scope = _scopeFactory.CreateScope();
+                    var auditLogger = scope.ServiceProvider.GetRequiredService<IAuditLogger>();
+                    await auditLogger.LogErrorAsync(
+                        "Failed to refresh settings cache after Redis notification",
+                        ex.ToString());
+                }
+                catch
+                {
+                    // ignored
+                }
             }
         });
 

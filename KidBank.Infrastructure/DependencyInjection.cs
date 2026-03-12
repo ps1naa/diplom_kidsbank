@@ -44,8 +44,8 @@ public static class DependencyInjection
         services.AddScoped<PasswordHasher>();
         services.AddScoped<IIdentityService, IdentityService>();
         services.AddScoped<IAuditLogger, DbAuditLogger>();
-        services.AddScoped<IAppSettingsService, DbAppSettingsService>();
-        services.AddScoped<ISettingsNotifier, RedisSettingsNotifier>();
+        services.AddScoped<DbAppSettingsService>();
+        services.AddScoped<RedisSettingsNotifier>();
         services.AddHostedService<RedisSettingsListener>();
         services.AddMemoryCache();
 

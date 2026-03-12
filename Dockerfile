@@ -20,4 +20,5 @@ RUN dotnet publish "KidBank.API.csproj" -c Release -o /app/publish /p:UseAppHost
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
+ENV ASPNETCORE_URLS=http://0.0.0.0:80
 ENTRYPOINT ["dotnet", "KidBank.API.dll"]

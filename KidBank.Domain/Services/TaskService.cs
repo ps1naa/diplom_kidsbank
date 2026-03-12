@@ -1,3 +1,4 @@
+using KidBank.Domain.Constants;
 using KidBank.Domain.Entities;
 using KidBank.Domain.Exceptions;
 using KidBank.Domain.Enums;
@@ -6,6 +7,36 @@ namespace KidBank.Domain.Services;
 
 public static class TaskService
 {
+    public static TaskAssignment Create(
+        Guid assignedToId,
+        Guid createdById,
+        string title,
+        decimal rewardAmount,
+        string currency = DefaultValues.DefaultCurrency,
+        string? description = null,
+        DateTime? dueDate = null)
+    {
+        if (string.IsNullOrWhiteSpace(title))
+            throw new ArgumentException(ValidationMessages.TaskTitleRequired, nameof(title));
+
+        if (rewardAmount < 0)
+            throw new ArgumentException(ValidationMessages.RewardAmountNonNegative, nameof(rewardAmount));
+
+        return new TaskAssignment
+        {
+            Id = Guid.NewGuid(),
+            AssignedToId = assignedToId,
+            CreatedById = createdById,
+            Title = title,
+            Description = description,
+            RewardAmount = rewardAmount,
+            Currency = currency.ToUpperInvariant(),
+            DueDate = dueDate.HasValue ? DateTime.SpecifyKind(dueDate.Value, DateTimeKind.Utc) : null,
+            Status = TaskAssignmentStatus.Pending,
+            CreatedAt = DateTime.UtcNow
+        };
+    }
+
     public static void Update(TaskAssignment task, string title, string? description, decimal rewardAmount, DateTime? dueDate)
     {
         if (task.Status != TaskAssignmentStatus.Pending)

@@ -63,7 +63,7 @@ public class UnlockAchievementCommandHandler : IRequestHandler<UnlockAchievement
 
         if (progress == null)
         {
-            progress = AchievementProgress.Create(
+            progress = AchievementService.CreateProgress(
                 _currentUserService.UserId.Value,
                 achievement.Id,
                 1);

@@ -36,7 +36,7 @@ public class UpdateClientSettingCommandHandler : IRequestHandler<UpdateClientSet
         }
         else
         {
-            var setting = ClientSetting.Create(userId, request.Key, request.Value);
+            var setting = ClientSettingService.Create(userId, request.Key, request.Value);
             _context.ClientSettings.Add(setting);
         }
 

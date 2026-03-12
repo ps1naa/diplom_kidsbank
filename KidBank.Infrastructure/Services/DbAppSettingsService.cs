@@ -1,4 +1,3 @@
-using KidBank.Application.Common.Interfaces;
 using KidBank.Domain.Entities;
 using KidBank.Domain.Services;
 using KidBank.Infrastructure.Persistence;
@@ -7,16 +6,16 @@ using Microsoft.Extensions.Caching.Memory;
 
 namespace KidBank.Infrastructure.Services;
 
-public class DbAppSettingsService : IAppSettingsService
+public class DbAppSettingsService
 {
     private readonly SettingsDbContext _context;
     private readonly IMemoryCache _cache;
-    private readonly ISettingsNotifier _notifier;
+    private readonly RedisSettingsNotifier _notifier;
     private readonly string _hostname;
     private const string CachePrefix = "AppSettings_";
     private static readonly TimeSpan CacheDuration = TimeSpan.FromMinutes(5);
 
-    public DbAppSettingsService(SettingsDbContext context, IMemoryCache cache, ISettingsNotifier notifier)
+    public DbAppSettingsService(SettingsDbContext context, IMemoryCache cache, RedisSettingsNotifier notifier)
     {
         _context = context;
         _cache = cache;
@@ -61,7 +60,7 @@ public class DbAppSettingsService : IAppSettingsService
         }
         else
         {
-            var setting = AppSetting.Create(key, value, hostname, description);
+            var setting = AppSettingService.Create(key, value, hostname, description);
             _context.AppSettings.Add(setting);
         }
 
@@ -75,7 +74,7 @@ public class DbAppSettingsService : IAppSettingsService
         return await GetCachedSettingsAsync(cancellationToken);
     }
 
-    public Task RefreshCacheAsync(CancellationToken cancellationToken = default)
+    public virtual Task RefreshCacheAsync(CancellationToken cancellationToken = default)
     {
         InvalidateCache();
         return Task.CompletedTask;

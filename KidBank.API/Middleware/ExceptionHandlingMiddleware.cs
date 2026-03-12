@@ -1,4 +1,5 @@
 using System.Text.Json;
+using KidBank.Application.Common.Interfaces;
 using KidBank.Domain.Exceptions;
 
 namespace KidBank.API.Middleware;
@@ -6,15 +7,13 @@ namespace KidBank.API.Middleware;
 public class ExceptionHandlingMiddleware
 {
     private readonly RequestDelegate _next;
-    private readonly ILogger<ExceptionHandlingMiddleware> _logger;
 
-    public ExceptionHandlingMiddleware(RequestDelegate next, ILogger<ExceptionHandlingMiddleware> logger)
+    public ExceptionHandlingMiddleware(RequestDelegate next)
     {
         _next = next;
-        _logger = logger;
     }
 
-    public async Task InvokeAsync(HttpContext context)
+    public async Task InvokeAsync(HttpContext context, IAuditLogger auditLogger)
     {
         try
         {
@@ -22,7 +21,9 @@ public class ExceptionHandlingMiddleware
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "An unhandled exception occurred");
+            await auditLogger.LogErrorAsync(
+                "Unhandled exception",
+                ex.ToString());
             await HandleExceptionAsync(context, ex);
         }
     }

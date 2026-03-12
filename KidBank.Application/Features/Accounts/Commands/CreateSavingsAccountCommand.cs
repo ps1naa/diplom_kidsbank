@@ -3,6 +3,7 @@ using KidBank.Application.Common.Interfaces;
 using KidBank.Application.Common.Models;
 using KidBank.Application.Features.Accounts.Queries;
 using KidBank.Domain.Entities;
+using KidBank.Domain.Services;
 using MediatR;
 
 namespace KidBank.Application.Features.Accounts.Commands;
@@ -39,7 +40,7 @@ public class CreateSavingsAccountCommandHandler : IRequestHandler<CreateSavingsA
             return Error.Unauthorized();
         }
 
-        var account = Account.CreateSavings(_currentUserService.UserId.Value, request.Name);
+        var account = AccountService.CreateSavings(_currentUserService.UserId.Value, request.Name);
 
         _context.Accounts.Add(account);
         await _context.SaveChangesAsync(cancellationToken);

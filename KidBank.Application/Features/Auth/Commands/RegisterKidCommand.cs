@@ -2,6 +2,7 @@ using FluentValidation;
 using KidBank.Application.Common.Interfaces;
 using KidBank.Application.Common.Models;
 using KidBank.Domain.Entities;
+using KidBank.Domain.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -53,13 +54,16 @@ public class RegisterKidCommandHandler : IRequestHandler<RegisterKidCommand, Res
 {
     private readonly IApplicationDbContext _context;
     private readonly IIdentityService _identityService;
+    private readonly IDataEncryptor _encryptor;
 
     public RegisterKidCommandHandler(
         IApplicationDbContext context,
-        IIdentityService identityService)
+        IIdentityService identityService,
+        IDataEncryptor encryptor)
     {
         _context = context;
         _identityService = identityService;
+        _encryptor = encryptor;
     }
 
     public async Task<Result<AuthResponse>> Handle(RegisterKidCommand request, CancellationToken cancellationToken)
@@ -72,13 +76,14 @@ public class RegisterKidCommandHandler : IRequestHandler<RegisterKidCommand, Res
             return Error.NotFound("Invitation not found or invalid");
         }
 
-        if (!invitation.IsValid())
+        if (!invitation.IsValid)
         {
             return Error.InvalidOperation("Invitation has expired or already been used");
         }
 
+        var emailHash = _encryptor.ComputeHash(request.Email.ToLowerInvariant());
         var emailExists = await _context.Users
-            .AnyAsync(u => u.Email == request.Email.ToLowerInvariant(), cancellationToken);
+            .AnyAsync(u => u.NormalizedEmailHash == emailHash, cancellationToken);
 
         if (emailExists)
         {
@@ -87,24 +92,25 @@ public class RegisterKidCommandHandler : IRequestHandler<RegisterKidCommand, Res
 
         var passwordHash = _identityService.HashPassword(request.Password);
 
-        var user = User.CreateKid(
+        var user = UserService.CreateKid(
             request.Email,
             passwordHash,
             request.FirstName,
             request.LastName,
             request.DateOfBirth,
-            invitation.FamilyId);
+            invitation.FamilyId,
+            emailHash);
 
-        invitation.MarkAsUsed(user.Id);
+        FamilyInvitationService.MarkAsUsed(invitation, user.Id);
 
-        var mainAccount = Account.CreateMain(user.Id);
+        var mainAccount = AccountService.CreateMain(user.Id);
 
         var (accessToken, jwtId) = _identityService.GenerateAccessToken(user);
 
-        var refreshToken = RefreshToken.Create(
+        var refreshToken = RefreshTokenService.Create(
             user.Id,
             jwtId,
-            TimeSpan.FromDays(30));
+            30);
 
         _context.Users.Add(user);
         _context.Accounts.Add(mainAccount);

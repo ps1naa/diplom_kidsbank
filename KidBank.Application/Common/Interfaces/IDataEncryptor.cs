@@ -4,4 +4,5 @@ public interface IDataEncryptor
 {
     string Encrypt(string plainText);
     string Decrypt(string cipherText);
+    string ComputeHash(string input);
 }

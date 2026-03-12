@@ -66,4 +66,14 @@ public class AesGcmDataEncryptor : IDataEncryptor
 
         return Encoding.UTF8.GetString(plainBytes);
     }
+
+    public string ComputeHash(string input)
+    {
+        if (string.IsNullOrEmpty(input))
+            return string.Empty;
+
+        using var hmac = new HMACSHA256(_key);
+        var hash = hmac.ComputeHash(Encoding.UTF8.GetBytes(input));
+        return Convert.ToBase64String(hash);
+    }
 }

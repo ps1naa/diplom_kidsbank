@@ -3,6 +3,7 @@ using KidBank.Application.Common.Interfaces;
 using KidBank.Application.Common.Models;
 using KidBank.Domain.Entities;
 using KidBank.Domain.Enums;
+using KidBank.Domain.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -89,7 +90,7 @@ public class CreateTaskCommandHandler : IRequestHandler<CreateTaskCommand, Resul
         var parent = await _context.Users
             .FirstOrDefaultAsync(u => u.Id == _currentUserService.UserId!.Value, cancellationToken);
 
-        var task = TaskAssignment.Create(
+        var task = TaskService.Create(
             request.AssignedToId,
             _currentUserService.UserId!.Value,
             request.Title,

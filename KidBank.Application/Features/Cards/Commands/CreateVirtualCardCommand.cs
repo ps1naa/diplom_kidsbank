@@ -3,6 +3,7 @@ using KidBank.Application.Common.Interfaces;
 using KidBank.Application.Common.Models;
 using KidBank.Domain.Entities;
 using KidBank.Domain.Enums;
+using KidBank.Domain.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -60,7 +61,7 @@ public class CreateVirtualCardCommandHandler : IRequestHandler<CreateVirtualCard
             return Error.Forbidden("Account belongs to another family");
 
         var cardHolderName = $"{account.User.FirstName} {account.User.LastName}".ToUpperInvariant();
-        var card = VirtualCard.Create(request.AccountId, cardHolderName);
+        var card = CardService.Create(request.AccountId, cardHolderName);
 
         _context.VirtualCards.Add(card);
         await _context.SaveChangesAsync(cancellationToken);

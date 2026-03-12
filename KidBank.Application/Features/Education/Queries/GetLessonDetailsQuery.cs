@@ -1,5 +1,6 @@
 using KidBank.Application.Common.Interfaces;
 using KidBank.Application.Common.Models;
+using KidBank.Domain.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -64,7 +65,7 @@ public class GetLessonDetailsQueryHandler : IRequestHandler<GetLessonDetailsQuer
         var quizzes = module.Quizzes.Select(q => new QuizDto(
             q.Id,
             q.Question,
-            q.GetOptions(),
+            QuizService.GetOptions(q),
             q.OrderIndex,
             q.XpReward))
             .ToList();

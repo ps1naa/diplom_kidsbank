@@ -1,9 +1,8 @@
-using KidBank.Application.Common.Interfaces;
 using StackExchange.Redis;
 
 namespace KidBank.Infrastructure.Services;
 
-public class RedisSettingsNotifier : ISettingsNotifier
+public class RedisSettingsNotifier
 {
     private readonly IConnectionMultiplexer _redis;
     private const string Channel = "settings_changed";
@@ -13,7 +12,7 @@ public class RedisSettingsNotifier : ISettingsNotifier
         _redis = redis;
     }
 
-    public async Task NotifySettingsChangedAsync(CancellationToken cancellationToken = default)
+    public virtual async Task NotifySettingsChangedAsync(CancellationToken cancellationToken = default)
     {
         var subscriber = _redis.GetSubscriber();
         await subscriber.PublishAsync(RedisChannel.Literal(Channel), Environment.MachineName);

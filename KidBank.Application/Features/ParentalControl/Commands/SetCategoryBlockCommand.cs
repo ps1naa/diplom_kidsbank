@@ -2,6 +2,7 @@ using FluentValidation;
 using KidBank.Application.Common.Interfaces;
 using KidBank.Application.Common.Models;
 using KidBank.Domain.Enums;
+using KidBank.Domain.Services;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -61,7 +62,7 @@ public class SetCategoryBlockCommandHandler : IRequestHandler<SetCategoryBlockCo
 
         if (request.IsBlocked && existingBlock == null)
         {
-            var block = Domain.Entities.CategoryBlock.Create(request.KidId, request.CategoryId, _currentUserService.UserId!.Value);
+            var block = CategoryBlockService.Create(request.KidId, request.CategoryId, _currentUserService.UserId!.Value);
             _context.CategoryBlocks.Add(block);
         }
         else if (!request.IsBlocked && existingBlock != null)
