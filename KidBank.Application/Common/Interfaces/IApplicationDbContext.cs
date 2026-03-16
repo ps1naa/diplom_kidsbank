@@ -28,5 +28,7 @@ public interface IApplicationDbContext
     DbSet<CategoryBlock> CategoryBlocks { get; }
     DbSet<AuditLog> AuditLogs { get; }
     DbSet<ClientSetting> ClientSettings { get; }
+    DbSet<TaskTemplate> TaskTemplates { get; }
+    DbSet<EducationMission> EducationMissions { get; }
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

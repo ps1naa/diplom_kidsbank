@@ -56,4 +56,16 @@ public class EducationController : BaseApiController
         var result = await Mediator.Send(command);
         return HandleResult(result);
     }
+
+    [HttpGet("missions")]
+    public async Task<IActionResult> GetMissions()
+    {
+        return HandleResult(await Mediator.Send(new GetMissionsQuery()));
+    }
+
+    [HttpGet("missions/{missionId:guid}")]
+    public async Task<IActionResult> GetMissionDetails(Guid missionId)
+    {
+        return HandleResult(await Mediator.Send(new GetMissionDetailsQuery(missionId)));
+    }
 }

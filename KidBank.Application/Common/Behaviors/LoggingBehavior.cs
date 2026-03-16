@@ -9,13 +9,16 @@ public class LoggingBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, 
 {
     private readonly IAuditLogger _auditLogger;
     private readonly IIdentityService _currentUserService;
+    private readonly IHttpContextInfo _httpContextInfo;
 
     public LoggingBehavior(
         IAuditLogger auditLogger,
-        IIdentityService currentUserService)
+        IIdentityService currentUserService,
+        IHttpContextInfo httpContextInfo)
     {
         _auditLogger = auditLogger;
         _currentUserService = currentUserService;
+        _httpContextInfo = httpContextInfo;
     }
 
     public async Task<TResponse> Handle(
@@ -25,6 +28,8 @@ public class LoggingBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, 
     {
         var requestName = typeof(TRequest).Name;
         var userId = _currentUserService.UserId;
+        var requestPath = _httpContextInfo.RequestPath;
+        var requestMethod = _httpContextInfo.RequestMethod;
 
         var stopwatch = Stopwatch.StartNew();
 
@@ -38,6 +43,8 @@ public class LoggingBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, 
                 "INFO",
                 $"Handled {requestName}",
                 userId: userId,
+                requestPath: requestPath,
+                requestMethod: requestMethod,
                 elapsedMs: stopwatch.ElapsedMilliseconds,
                 cancellationToken: cancellationToken);
 
@@ -52,6 +59,8 @@ public class LoggingBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, 
                 $"Error handling {requestName}",
                 exception: ex.ToString(),
                 userId: userId,
+                requestPath: requestPath,
+                requestMethod: requestMethod,
                 elapsedMs: stopwatch.ElapsedMilliseconds,
                 cancellationToken: cancellationToken);
 

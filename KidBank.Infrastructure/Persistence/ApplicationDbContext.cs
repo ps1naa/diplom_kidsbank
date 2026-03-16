@@ -38,6 +38,8 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     public DbSet<CategoryBlock> CategoryBlocks => Set<CategoryBlock>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
     public DbSet<ClientSetting> ClientSettings => Set<ClientSetting>();
+    public DbSet<TaskTemplate> TaskTemplates => Set<TaskTemplate>();
+    public DbSet<EducationMission> EducationMissions => Set<EducationMission>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

@@ -85,3 +85,6 @@ Desktop.ini
 .env
 .env.local
 .env.*.local
+
+## E2E / manual test scripts (local only)
+scripts/

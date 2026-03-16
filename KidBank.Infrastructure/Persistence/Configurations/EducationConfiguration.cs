@@ -15,6 +15,14 @@ public class EducationModuleConfiguration : IEntityTypeConfiguration<EducationMo
         builder.Property(em => em.Id)
             .HasColumnName("id");
 
+        builder.Property(em => em.MissionId)
+            .HasColumnName("mission_id");
+
+        builder.HasOne(em => em.Mission)
+            .WithMany(m => m.Modules)
+            .HasForeignKey(em => em.MissionId)
+            .OnDelete(DeleteBehavior.SetNull);
+
         builder.Property(em => em.Title)
             .HasColumnName("title")
             .HasMaxLength(200)

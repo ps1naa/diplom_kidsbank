@@ -71,6 +71,7 @@ builder.Services.AddCors(options =>
 var app = builder.Build();
 
 await SeedAppSettingsAsync(app);
+await SeedReferenceDataAsync(app);
 
 if (app.Environment.IsDevelopment())
 {
@@ -145,4 +146,11 @@ static async Task SeedAppSettingsAsync(WebApplication app)
     }
 
     await settingsDb.SaveChangesAsync();
+}
+
+static async Task SeedReferenceDataAsync(WebApplication app)
+{
+    using var scope = app.Services.CreateScope();
+    var context = scope.ServiceProvider.GetRequiredService<KidBank.Infrastructure.Persistence.ApplicationDbContext>();
+    await KidBank.Infrastructure.Persistence.DataSeeder.SeedReferenceDataAsync(context);
 }

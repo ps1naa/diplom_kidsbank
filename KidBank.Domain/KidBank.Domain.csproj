@@ -6,4 +6,12 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="KidBank.Infrastructure" />
+    <InternalsVisibleTo Include="KidBank.Application" />
+    <InternalsVisibleTo Include="KidBank.Domain.Tests" />
+    <InternalsVisibleTo Include="KidBank.Application.Tests" />
+    <InternalsVisibleTo Include="KidBank.Infrastructure.Tests" />
+  </ItemGroup>
+
 </Project>
