@@ -5,6 +5,8 @@ using KidBank.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 
+AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddApplication();
@@ -152,5 +154,13 @@ static async Task SeedReferenceDataAsync(WebApplication app)
 {
     using var scope = app.Services.CreateScope();
     var context = scope.ServiceProvider.GetRequiredService<KidBank.Infrastructure.Persistence.ApplicationDbContext>();
+    await context.Database.MigrateAsync();
     await KidBank.Infrastructure.Persistence.DataSeeder.SeedReferenceDataAsync(context);
+
+    var hasher = scope.ServiceProvider.GetRequiredService<KidBank.Infrastructure.Identity.PasswordHasher>();
+    var encryptor = scope.ServiceProvider.GetRequiredService<KidBank.Application.Common.Interfaces.IDataEncryptor>();
+    await KidBank.Infrastructure.Persistence.DataSeeder.SeedTestDataAsync(
+        context,
+        password => hasher.Hash(password),
+        email => encryptor.ComputeHash(email.ToLowerInvariant()));
 }
