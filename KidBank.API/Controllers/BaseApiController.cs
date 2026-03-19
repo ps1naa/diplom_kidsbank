@@ -51,6 +51,7 @@ public abstract class BaseApiController : ControllerBase
         "SPENDING_LIMIT_EXCEEDED" => BadRequest(new { error.Code, error.Message }),
         "CONCURRENCY_CONFLICT" => Conflict(new { error.Code, error.Message }),
         "INVALID_OPERATION" => BadRequest(new { error.Code, error.Message }),
+        "SUBSCRIPTION_REQUIRED" => StatusCode(StatusCodes.Status402PaymentRequired, new { error.Code, error.Message }),
         _ => StatusCode(StatusCodes.Status500InternalServerError, new { error.Code, error.Message })
     };
 }

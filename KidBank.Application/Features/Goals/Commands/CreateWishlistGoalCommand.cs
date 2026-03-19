@@ -2,8 +2,10 @@ using FluentValidation;
 using KidBank.Application.Common.Interfaces;
 using KidBank.Application.Common.Models;
 using KidBank.Domain.Entities;
+using KidBank.Domain.Enums;
 using KidBank.Domain.Services;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 
 namespace KidBank.Application.Features.Goals.Commands;
 
@@ -49,21 +51,30 @@ public class CreateWishlistGoalCommandHandler : IRequestHandler<CreateWishlistGo
 {
     private readonly IApplicationDbContext _context;
     private readonly IIdentityService _currentUserService;
+    private readonly ISubscriptionService _subscription;
 
     public CreateWishlistGoalCommandHandler(
         IApplicationDbContext context,
-        IIdentityService currentUserService)
+        IIdentityService currentUserService,
+        ISubscriptionService subscription)
     {
         _context = context;
         _currentUserService = currentUserService;
+        _subscription = subscription;
     }
 
     public async Task<Result<GoalDto>> Handle(CreateWishlistGoalCommand request, CancellationToken cancellationToken)
     {
-        if (!_currentUserService.UserId.HasValue)
+        if (!_currentUserService.UserId.HasValue || !_currentUserService.FamilyId.HasValue)
         {
             return Error.Unauthorized();
         }
+
+        var limits = await _subscription.GetLimitsAsync(_currentUserService.FamilyId.Value, cancellationToken);
+        var activeGoals = await _context.WishlistGoals
+            .CountAsync(g => g.UserId == _currentUserService.UserId.Value && g.Status == GoalStatus.Active, cancellationToken);
+        if (activeGoals >= limits.MaxGoalsPerKid)
+            return Error.SubscriptionRequired($"Maximum {limits.MaxGoalsPerKid} active goals. Upgrade to Pro for up to 20");
 
         var goal = GoalService.Create(
             _currentUserService.UserId.Value,

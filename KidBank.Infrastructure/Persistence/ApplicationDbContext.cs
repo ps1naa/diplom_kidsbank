@@ -40,6 +40,7 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     public DbSet<ClientSetting> ClientSettings => Set<ClientSetting>();
     public DbSet<TaskTemplate> TaskTemplates => Set<TaskTemplate>();
     public DbSet<EducationMission> EducationMissions => Set<EducationMission>();
+    public DbSet<FamilySubscription> FamilySubscriptions => Set<FamilySubscription>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

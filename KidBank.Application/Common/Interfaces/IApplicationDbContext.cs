@@ -30,5 +30,6 @@ public interface IApplicationDbContext
     DbSet<ClientSetting> ClientSettings { get; }
     DbSet<TaskTemplate> TaskTemplates { get; }
     DbSet<EducationMission> EducationMissions { get; }
+    DbSet<FamilySubscription> FamilySubscriptions { get; }
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

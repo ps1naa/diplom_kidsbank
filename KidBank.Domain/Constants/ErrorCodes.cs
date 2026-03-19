@@ -12,4 +12,5 @@ public static class ErrorCodes
     public const string InvalidOperation = "INVALID_OPERATION";
     public const string ConcurrencyConflict = "CONCURRENCY_CONFLICT";
     public const string InternalError = "INTERNAL_ERROR";
+    public const string SubscriptionRequired = "SUBSCRIPTION_REQUIRED";
 }

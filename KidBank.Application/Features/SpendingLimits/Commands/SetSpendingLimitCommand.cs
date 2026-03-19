@@ -52,13 +52,16 @@ public class SetSpendingLimitCommandHandler : IRequestHandler<SetSpendingLimitCo
 {
     private readonly IApplicationDbContext _context;
     private readonly IIdentityService _currentUserService;
+    private readonly ISubscriptionService _subscription;
 
     public SetSpendingLimitCommandHandler(
         IApplicationDbContext context,
-        IIdentityService currentUserService)
+        IIdentityService currentUserService,
+        ISubscriptionService subscription)
     {
         _context = context;
         _currentUserService = currentUserService;
+        _subscription = subscription;
     }
 
     public async Task<Result<SpendingLimitDto>> Handle(SetSpendingLimitCommand request, CancellationToken cancellationToken)
@@ -67,6 +70,10 @@ public class SetSpendingLimitCommandHandler : IRequestHandler<SetSpendingLimitCo
         {
             return Error.Forbidden("Only parents can set spending limits");
         }
+
+        var limits = await _subscription.GetLimitsAsync(_currentUserService.FamilyId!.Value, cancellationToken);
+        if (!limits.HasSpendingLimits)
+            return Error.SubscriptionRequired("Spending limits");
 
         var kid = await _context.Users
             .FirstOrDefaultAsync(u => u.Id == request.KidId && u.Role == UserRole.Kid && !u.IsDeleted, cancellationToken);

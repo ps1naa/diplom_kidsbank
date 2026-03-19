@@ -36,13 +36,16 @@ public class CreateVirtualCardCommandHandler : IRequestHandler<CreateVirtualCard
 {
     private readonly IApplicationDbContext _context;
     private readonly IIdentityService _currentUserService;
+    private readonly ISubscriptionService _subscription;
 
     public CreateVirtualCardCommandHandler(
         IApplicationDbContext context,
-        IIdentityService currentUserService)
+        IIdentityService currentUserService,
+        ISubscriptionService subscription)
     {
         _context = context;
         _currentUserService = currentUserService;
+        _subscription = subscription;
     }
 
     public async Task<Result<VirtualCardDto>> Handle(CreateVirtualCardCommand request, CancellationToken cancellationToken)
@@ -59,6 +62,12 @@ public class CreateVirtualCardCommandHandler : IRequestHandler<CreateVirtualCard
 
         if (_currentUserService.IsParent && account.User.FamilyId != _currentUserService.FamilyId)
             return Error.Forbidden("Account belongs to another family");
+
+        var limits = await _subscription.GetLimitsAsync(account.User.FamilyId, cancellationToken);
+        var existingCards = await _context.VirtualCards
+            .CountAsync(c => c.AccountId == request.AccountId && c.IsActive, cancellationToken);
+        if (existingCards >= limits.MaxCardsPerKid)
+            return Error.SubscriptionRequired($"Maximum {limits.MaxCardsPerKid} cards per account. Upgrade to Pro for up to 5");
 
         var cardHolderName = $"{account.User.FirstName} {account.User.LastName}".ToUpperInvariant();
         var card = CardService.Create(request.AccountId, cardHolderName);

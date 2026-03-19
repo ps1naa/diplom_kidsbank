@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../core/api_service.dart';
 import '../../core/theme.dart';
 
 class SubscriptionScreen extends StatefulWidget {
@@ -10,13 +12,28 @@ class SubscriptionScreen extends StatefulWidget {
 class _SubscriptionScreenState extends State<SubscriptionScreen> with SingleTickerProviderStateMixin {
   late AnimationController _animCtrl;
   int _selectedPlan = 1;
+  Map<String, dynamic>? _status;
+  bool _loading = true;
+  bool _subscribing = false;
 
   @override
   void initState() {
     super.initState();
     _animCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 800));
     _animCtrl.forward();
+    _load();
   }
+
+  Future<void> _load() async {
+    try {
+      final data = await context.read<ApiService>().get('subscriptions');
+      setState(() { _status = data; _loading = false; });
+    } catch (_) { setState(() => _loading = false); }
+  }
+
+  bool get _isPro => _status?['isPro'] == true;
+  Map<String, dynamic>? get _activeSub => _status?['activeSubscription'];
+  Map<String, dynamic>? get _limits => _status?['limits'];
 
   @override
   void dispose() { _animCtrl.dispose(); super.dispose(); }
@@ -25,34 +42,46 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> with SingleTick
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Подписка KidBank Pro')),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(children: [
-          FadeTransition(
-            opacity: _animCtrl,
-            child: SlideTransition(
-              position: Tween(begin: const Offset(0, 0.3), end: Offset.zero).animate(CurvedAnimation(parent: _animCtrl, curve: Curves.easeOutCubic)),
-              child: _buildHeader(),
+      body: _loading
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
+              padding: const EdgeInsets.all(20),
+              child: Column(children: [
+                FadeTransition(
+                  opacity: _animCtrl,
+                  child: SlideTransition(
+                    position: Tween(begin: const Offset(0, 0.3), end: Offset.zero).animate(CurvedAnimation(parent: _animCtrl, curve: Curves.easeOutCubic)),
+                    child: _buildHeader(),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                if (_isPro) _buildActiveSubscription() else ...[
+                  _buildPlans(),
+                  const SizedBox(height: 24),
+                ],
+                _buildFeatures(),
+                const SizedBox(height: 24),
+                _buildComparisonTable(),
+                const SizedBox(height: 32),
+                if (!_isPro) SizedBox(width: double.infinity, child: ElevatedButton(
+                  onPressed: _subscribing ? null : _subscribe,
+                  style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16)),
+                  child: _subscribing
+                      ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                      : const Text('Оформить подписку', style: TextStyle(fontSize: 16)),
+                )),
+                if (_isPro && _activeSub?['autoRenew'] == true) SizedBox(width: double.infinity, child: OutlinedButton(
+                  onPressed: _cancelSubscription,
+                  style: OutlinedButton.styleFrom(foregroundColor: AppColors.error, side: const BorderSide(color: AppColors.error)),
+                  child: const Text('Отменить автопродление'),
+                )),
+                const SizedBox(height: 16),
+                Text(
+                  _isPro ? 'Подписка активна для всей семьи' : 'Подписку можно отменить в любое время',
+                  style: TextStyle(color: context.textSecondary, fontSize: 12),
+                ),
+              ]),
             ),
-          ),
-          const SizedBox(height: 24),
-          _buildPlans(),
-          const SizedBox(height: 24),
-          _buildFeatures(),
-          const SizedBox(height: 24),
-          _buildComparisonTable(),
-          const SizedBox(height: 32),
-          SizedBox(width: double.infinity, child: ElevatedButton(
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Функция подписки скоро будет доступна!')));
-            },
-            style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16)),
-            child: const Text('Оформить подписку', style: TextStyle(fontSize: 16)),
-          )),
-          const SizedBox(height: 16),
-          Text('Подписку можно отменить в любое время', style: TextStyle(color: context.textSecondary, fontSize: 12)),
-        ]),
-      ),
     );
   }
 
@@ -61,20 +90,71 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> with SingleTick
       width: double.infinity,
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(colors: [AppColors.cardGradient1, AppColors.cardGradient2]),
+        gradient: LinearGradient(colors: _isPro
+            ? [AppColors.success, AppColors.primary]
+            : [AppColors.cardGradient1, AppColors.cardGradient2]),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Column(children: [
         Container(
           width: 64, height: 64,
           decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(16)),
-          child: const Icon(Icons.workspace_premium, color: Colors.white, size: 36),
+          child: Icon(_isPro ? Icons.verified : Icons.workspace_premium, color: Colors.white, size: 36),
         ),
         const SizedBox(height: 16),
-        const Text('KidBank Pro', style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
+        Text(_isPro ? 'KidBank Pro' : 'KidBank Pro', style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
         const SizedBox(height: 8),
-        const Text('Получите доступ ко всем возможностям', style: TextStyle(color: Colors.white70, fontSize: 14), textAlign: TextAlign.center),
+        Text(
+          _isPro ? 'Все возможности разблокированы!' : 'Получите доступ ко всем возможностям',
+          style: const TextStyle(color: Colors.white70, fontSize: 14),
+          textAlign: TextAlign.center,
+        ),
       ]),
+    );
+  }
+
+  Widget _buildActiveSubscription() {
+    final endDate = _activeSub?['endDate'] != null
+        ? DateTime.tryParse(_activeSub!['endDate'].toString())
+        : null;
+    final daysLeft = endDate != null ? endDate.difference(DateTime.now()).inDays : 0;
+
+    return Card(
+      margin: const EdgeInsets.only(bottom: 24),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Row(children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(color: AppColors.success.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(12)),
+              child: const Text('Активна', style: TextStyle(color: AppColors.success, fontWeight: FontWeight.w600, fontSize: 13)),
+            ),
+            const Spacer(),
+            Text('${_activeSub?['plan'] == 'Yearly' ? 'Годовая' : 'Месячная'}', style: TextStyle(color: context.textSecondary, fontSize: 13)),
+          ]),
+          const SizedBox(height: 12),
+          Text('$daysLeft дн. осталось', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: context.textPrimary)),
+          const SizedBox(height: 4),
+          if (endDate != null) Text(
+            'Действует до ${endDate.day.toString().padLeft(2, '0')}.${endDate.month.toString().padLeft(2, '0')}.${endDate.year}',
+            style: TextStyle(color: context.textSecondary, fontSize: 13),
+          ),
+          const SizedBox(height: 8),
+          if (_activeSub?['autoRenew'] == true)
+            Row(children: [
+              Icon(Icons.autorenew, size: 16, color: AppColors.success),
+              const SizedBox(width: 4),
+              Text('Автопродление включено', style: TextStyle(color: AppColors.success, fontSize: 12)),
+            ])
+          else
+            Row(children: [
+              Icon(Icons.cancel_outlined, size: 16, color: AppColors.warning),
+              const SizedBox(width: 4),
+              Text('Автопродление отключено', style: TextStyle(color: AppColors.warning, fontSize: 12)),
+            ]),
+        ]),
+      ),
     );
   }
 
@@ -106,12 +186,15 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> with SingleTick
 
   Widget _buildFeatures() {
     final features = [
-      _Feature(Icons.credit_card, 'Неограниченные карты', 'Создавайте сколько угодно виртуальных карт'),
-      _Feature(Icons.school, 'Все образовательные квизы', 'Доступ ко всем модулям и урокам'),
-      _Feature(Icons.trending_up, 'Повышенный процент', 'Выше процент на сберегательном счёте'),
-      _Feature(Icons.savings, 'Досрочный вывод', 'Возможность досрочно снять деньги с копилки'),
-      _Feature(Icons.bar_chart, 'Расширенная аналитика', 'Подробная аналитика расходов и доходов'),
-      _Feature(Icons.support_agent, 'Приоритетная поддержка', 'Ответ в течение 1 часа'),
+      _Feature(Icons.family_restroom, 'До 10 детей в семье', 'Вместо 2 на бесплатном плане'),
+      _Feature(Icons.credit_card, 'До 5 карт на ребёнка', 'Вместо 1 виртуальной карты'),
+      _Feature(Icons.flag, 'До 20 целей', 'Вместо 3 на бесплатном плане'),
+      _Feature(Icons.savings, 'До 5 копилок', 'Вместо 1 сберегательного счёта'),
+      _Feature(Icons.block, 'Лимиты расходов', 'По дням, неделям и месяцам'),
+      _Feature(Icons.category, 'Блокировка категорий', 'Ограничьте траты ребёнка'),
+      _Feature(Icons.school, 'Все образовательные модули', 'Доступ ко всем миссиям и квизам'),
+      _Feature(Icons.bar_chart, 'Расширенная аналитика', 'Подробная статистика за все время'),
+      _Feature(Icons.description, 'До 50 шаблонов заданий', 'Вместо 5 на бесплатном плане'),
     ];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -136,6 +219,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> with SingleTick
                 Text(e.value.title, style: const TextStyle(fontWeight: FontWeight.w600)),
                 Text(e.value.subtitle, style: TextStyle(fontSize: 12, color: context.textSecondary)),
               ])),
+              if (_isPro) const Icon(Icons.check_circle, color: AppColors.success, size: 20),
             ]),
           ),
         )),
@@ -149,16 +233,64 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> with SingleTick
         padding: const EdgeInsets.all(16),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text('Сравнение планов', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: context.textPrimary)),
-          const SizedBox(height: 12),
-          _CompRow('Виртуальные карты', '1', 'Безлимит'),
-          _CompRow('Образовательные квизы', 'Пробные', 'Все'),
-          _CompRow('Процент по копилке', '2%', '5%'),
-          _CompRow('Досрочный вывод', '—', 'Да'),
+          const Divider(),
+          _CompRow('Детей в семье', '2', '10'),
+          _CompRow('Виртуальные карты', '1', 'До 5'),
+          _CompRow('Цели накопления', '3', 'До 20'),
+          _CompRow('Копилки', '1', 'До 5'),
+          _CompRow('Лимиты расходов', '—', 'Да'),
+          _CompRow('Блокировка категорий', '—', 'Да'),
+          _CompRow('Образование', 'Базовое', 'Все модули'),
           _CompRow('Аналитика', 'Базовая', 'Расширенная'),
-          _CompRow('Поддержка', 'Стандарт', 'Приоритет'),
+          _CompRow('Шаблоны заданий', '5', 'До 50'),
         ]),
       ),
     );
+  }
+
+  Future<void> _subscribe() async {
+    setState(() => _subscribing = true);
+    try {
+      final plan = _selectedPlan == 0 ? 'Monthly' : 'Yearly';
+      await context.read<ApiService>().post('subscriptions', body: {'plan': plan});
+      await _load();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Подписка Pro оформлена!'),
+          backgroundColor: AppColors.success,
+        ));
+      }
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+    }
+    setState(() => _subscribing = false);
+  }
+
+  Future<void> _cancelSubscription() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text('Отменить автопродление?'),
+        content: const Text('Подписка будет активна до конца оплаченного периода, но не продлится автоматически.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Нет')),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
+            child: const Text('Отменить'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    try {
+      await context.read<ApiService>().post('subscriptions/cancel');
+      await _load();
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Автопродление отменено')));
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+    }
   }
 }
 

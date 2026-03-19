@@ -81,4 +81,7 @@ public record Error(string Code, string Message)
 
     public static Error InternalError(string message = "An unexpected error occurred") =>
         new(ErrorCodes.InternalError, message);
+
+    public static Error SubscriptionRequired(string feature = "This feature") =>
+        new(ErrorCodes.SubscriptionRequired, $"{feature} requires an active KidBank Pro subscription");
 }

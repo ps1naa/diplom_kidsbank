@@ -26,19 +26,29 @@ public class SetCategoryBlockCommandHandler : IRequestHandler<SetCategoryBlockCo
 {
     private readonly IApplicationDbContext _context;
     private readonly IIdentityService _currentUserService;
+    private readonly ISubscriptionService _subscription;
 
     public SetCategoryBlockCommandHandler(
         IApplicationDbContext context,
-        IIdentityService currentUserService)
+        IIdentityService currentUserService,
+        ISubscriptionService subscription)
     {
         _context = context;
         _currentUserService = currentUserService;
+        _subscription = subscription;
     }
 
     public async Task<Result> Handle(SetCategoryBlockCommand request, CancellationToken cancellationToken)
     {
         if (!_currentUserService.IsParent)
             return Error.Forbidden("Only parents can manage category blocks");
+
+        if (request.IsBlocked)
+        {
+            var limits = await _subscription.GetLimitsAsync(_currentUserService.FamilyId!.Value, cancellationToken);
+            if (!limits.HasCategoryBlocks)
+                return Error.SubscriptionRequired("Category blocking");
+        }
 
         var kid = await _context.Users
             .FirstOrDefaultAsync(u => u.Id == request.KidId && 

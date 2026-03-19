@@ -10,4 +10,5 @@ public class Family
     public ICollection<User> Members { get; internal set; } = new List<User>();
     public ICollection<FamilyInvitation> Invitations { get; internal set; } = new List<FamilyInvitation>();
     public ICollection<ChatMessage> ChatMessages { get; internal set; } = new List<ChatMessage>();
+    public ICollection<FamilySubscription> Subscriptions { get; internal set; } = new List<FamilySubscription>();
 }

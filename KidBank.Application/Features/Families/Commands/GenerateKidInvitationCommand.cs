@@ -28,13 +28,16 @@ public class GenerateKidInvitationCommandHandler : IRequestHandler<GenerateKidIn
 {
     private readonly IApplicationDbContext _context;
     private readonly IIdentityService _currentUserService;
+    private readonly ISubscriptionService _subscription;
 
     public GenerateKidInvitationCommandHandler(
         IApplicationDbContext context,
-        IIdentityService currentUserService)
+        IIdentityService currentUserService,
+        ISubscriptionService subscription)
     {
         _context = context;
         _currentUserService = currentUserService;
+        _subscription = subscription;
     }
 
     public async Task<Result<InvitationResponse>> Handle(GenerateKidInvitationCommand request, CancellationToken cancellationToken)
@@ -48,6 +51,12 @@ public class GenerateKidInvitationCommandHandler : IRequestHandler<GenerateKidIn
         {
             return Error.InvalidOperation("User does not belong to a family");
         }
+
+        var limits = await _subscription.GetLimitsAsync(_currentUserService.FamilyId.Value, cancellationToken);
+        var currentKids = await _context.Users
+            .CountAsync(u => u.FamilyId == _currentUserService.FamilyId.Value && u.Role == Domain.Enums.UserRole.Kid && !u.IsDeleted, cancellationToken);
+        if (currentKids >= limits.MaxKids)
+            return Error.SubscriptionRequired($"Maximum {limits.MaxKids} kids in family. Upgrade to Pro for up to 10");
 
         var family = await _context.Families
             .FirstOrDefaultAsync(f => f.Id == _currentUserService.FamilyId.Value, cancellationToken);

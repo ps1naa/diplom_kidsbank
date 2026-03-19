@@ -3,8 +3,10 @@ using KidBank.Application.Common.Interfaces;
 using KidBank.Application.Common.Models;
 using KidBank.Application.Features.Accounts.Queries;
 using KidBank.Domain.Entities;
+using KidBank.Domain.Enums;
 using KidBank.Domain.Services;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 
 namespace KidBank.Application.Features.Accounts.Commands;
 
@@ -24,21 +26,30 @@ public class CreateSavingsAccountCommandHandler : IRequestHandler<CreateSavingsA
 {
     private readonly IApplicationDbContext _context;
     private readonly IIdentityService _currentUserService;
+    private readonly ISubscriptionService _subscription;
 
     public CreateSavingsAccountCommandHandler(
         IApplicationDbContext context,
-        IIdentityService currentUserService)
+        IIdentityService currentUserService,
+        ISubscriptionService subscription)
     {
         _context = context;
         _currentUserService = currentUserService;
+        _subscription = subscription;
     }
 
     public async Task<Result<AccountDto>> Handle(CreateSavingsAccountCommand request, CancellationToken cancellationToken)
     {
-        if (!_currentUserService.UserId.HasValue)
+        if (!_currentUserService.UserId.HasValue || !_currentUserService.FamilyId.HasValue)
         {
             return Error.Unauthorized();
         }
+
+        var limits = await _subscription.GetLimitsAsync(_currentUserService.FamilyId.Value, cancellationToken);
+        var savingsCount = await _context.Accounts
+            .CountAsync(a => a.UserId == _currentUserService.UserId.Value && a.Type == AccountType.Savings && a.IsActive, cancellationToken);
+        if (savingsCount >= limits.MaxSavingsAccounts)
+            return Error.SubscriptionRequired($"Maximum {limits.MaxSavingsAccounts} savings accounts. Upgrade to Pro for up to 5");
 
         var account = AccountService.CreateSavings(_currentUserService.UserId.Value, request.Name);
 
