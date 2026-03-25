@@ -35,7 +35,7 @@ public class SetAllowanceCommandValidator : AbstractValidator<SetAllowanceComman
     {
         RuleFor(x => x.KidId).NotEmpty();
         RuleFor(x => x.Amount).GreaterThan(0);
-        RuleFor(x => x.Frequency).Must(f => new[] { "Weekly", "BiWeekly", "Monthly" }.Contains(f));
+        RuleFor(x => x.Frequency).Must(f => new[] { "Daily", "Weekly", "BiWeekly", "Monthly" }.Contains(f));
         RuleFor(x => x.DayOfWeek).InclusiveBetween(0, 6);
         RuleFor(x => x.DayOfMonth).InclusiveBetween(1, 28);
     }

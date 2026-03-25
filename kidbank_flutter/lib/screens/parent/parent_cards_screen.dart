@@ -169,8 +169,8 @@ class _ParentCardsScreenState extends State<ParentCardsScreen> with TickerProvid
             ),
             _ActionTile(
               icon: Icons.visibility,
-              title: 'Показать CVV',
-              subtitle: 'Безопасный просмотр данных карты',
+              title: 'Полная информация о карте',
+              subtitle: 'Номер, срок, CVV',
               color: AppColors.primary,
               onTap: () {
                 Navigator.pop(ctx);
@@ -195,15 +195,20 @@ class _ParentCardsScreenState extends State<ParentCardsScreen> with TickerProvid
   }
 
   void _showCVV(dynamic card) {
+    final fullNumber = card['cardNumber'] ?? '****';
+    final formatted = fullNumber.length == 16
+        ? '${fullNumber.substring(0, 4)} ${fullNumber.substring(4, 8)} ${fullNumber.substring(8, 12)} ${fullNumber.substring(12)}'
+        : fullNumber;
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Данные карты'),
+        title: const Text('Полная информация о карте'),
         content: Column(mainAxisSize: MainAxisSize.min, children: [
-          _InfoRow('Номер', card['cardNumber'] ?? '****'),
+          _InfoRow('Номер', formatted),
           _InfoRow('Владелец', card['cardHolderName'] ?? ''),
           _InfoRow('Срок', _formatExpiry(card['expiryDate'])),
+          _InfoRow('CVV', card['cvv'] ?? '***'),
         ]),
         actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('Закрыть'))],
       ),

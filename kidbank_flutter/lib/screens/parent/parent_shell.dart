@@ -13,18 +13,18 @@ class ParentShell extends StatefulWidget {
 
 class _ParentShellState extends State<ParentShell> {
   int _index = 0;
-  final _screens = const [
-    ParentDashboardScreen(),
-    ParentKidsScreen(),
-    ParentCardsScreen(),
-    ParentTasksScreen(),
-    ParentProfileScreen(),
-  ];
+  int _refreshKey = 0;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(index: _index, children: _screens),
+      body: IndexedStack(index: _index, children: [
+        ParentDashboardScreen(key: ValueKey('pdash_$_refreshKey')),
+        ParentKidsScreen(key: ValueKey('pkids_$_refreshKey')),
+        ParentCardsScreen(key: ValueKey('pcards_$_refreshKey')),
+        ParentTasksScreen(key: ValueKey('ptasks_$_refreshKey')),
+        ParentProfileScreen(key: ValueKey('pprofile_$_refreshKey')),
+      ]),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: Theme.of(context).colorScheme.surface,
@@ -32,7 +32,10 @@ class _ParentShellState extends State<ParentShell> {
         ),
         child: BottomNavigationBar(
           currentIndex: _index,
-          onTap: (i) => setState(() => _index = i),
+          onTap: (i) => setState(() {
+            if (i != _index) _refreshKey++;
+            _index = i;
+          }),
           items: const [
             BottomNavigationBarItem(icon: Icon(Icons.dashboard_rounded), label: 'Главная'),
             BottomNavigationBarItem(icon: Icon(Icons.family_restroom), label: 'Дети'),

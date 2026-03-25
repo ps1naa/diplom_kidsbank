@@ -88,7 +88,11 @@ public class TransferBetweenAccountsCommandHandler : IRequestHandler<TransferBet
             return Error.InsufficientFunds();
         }
 
-        if (_currentUserService.IsKid)
+        var isOwnSavingsTransfer = _currentUserService.IsKid
+            && destinationAccount.UserId == _currentUserService.UserId.Value
+            && destinationAccount.Type == Domain.Enums.AccountType.Savings;
+
+        if (_currentUserService.IsKid && !isOwnSavingsTransfer)
         {
             var limits = await _context.SpendingLimits
                 .Where(sl => sl.KidId == _currentUserService.UserId.Value && sl.IsActive)

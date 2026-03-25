@@ -55,12 +55,7 @@ public class DeleteGoalCommandHandler : IRequestHandler<DeleteGoalCommand, Resul
             return Error.Forbidden("You can only delete your own goals");
         }
 
-        if (goal.Status != GoalStatus.Active)
-        {
-            return Error.InvalidOperation("Only active goals can be deleted");
-        }
-
-        if (goal.CurrentAmount > 0)
+        if (goal.CurrentAmount > 0 && goal.Status == GoalStatus.Active)
         {
             var mainAccount = await _context.Accounts
                 .FirstOrDefaultAsync(a => a.UserId == goal.UserId && a.Type == AccountType.Main, cancellationToken);
@@ -72,7 +67,8 @@ public class DeleteGoalCommandHandler : IRequestHandler<DeleteGoalCommand, Resul
             _context.Transactions.Add(tx);
         }
 
-        GoalService.Cancel(goal);
+        if (goal.Status == GoalStatus.Active)
+            GoalService.Cancel(goal);
         await _context.SaveChangesAsync(cancellationToken);
 
         return Result.Success();

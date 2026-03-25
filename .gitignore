@@ -88,3 +88,8 @@ Desktop.ini
 
 ## E2E / manual test scripts (local only)
 scripts/
+
+## Draw.io / diagrams.net (локальные черновики и бэкапы)
+diagrams/.$*
+**/*.drawio.dtmp
+**/*.drawio.bkp

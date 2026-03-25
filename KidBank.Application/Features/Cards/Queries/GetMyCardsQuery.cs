@@ -35,14 +35,16 @@ public class GetMyCardsQueryHandler : IRequestHandler<GetMyCardsQuery, Result<Li
         var cards = entities
             .Select(c => new VirtualCardDto(
                 c.Id,
-                c.MaskedCardNumber,
+                c.CardNumber,
                 c.CardHolderName,
                 c.ExpiryDate,
                 c.IsActive,
                 c.IsFrozen,
                 c.DailyLimit,
                 c.MonthlyLimit,
-                c.CreatedAt))
+                c.CreatedAt,
+                c.Cvv,
+                c.MaskedCardNumber))
             .ToList();
 
         return cards;

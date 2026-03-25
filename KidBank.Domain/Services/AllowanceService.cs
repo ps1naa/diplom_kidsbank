@@ -52,6 +52,7 @@ public static class AllowanceService
         var now = DateTime.UtcNow.Date;
         return frequency switch
         {
+            "Daily" => now.AddDays(1),
             "Weekly" => GetNextWeekday(now, (DayOfWeek)dayOfWeek),
             "BiWeekly" => GetNextWeekday(now, (DayOfWeek)dayOfWeek).AddDays(
                 GetNextWeekday(now, (DayOfWeek)dayOfWeek) <= now ? 14 : 0),

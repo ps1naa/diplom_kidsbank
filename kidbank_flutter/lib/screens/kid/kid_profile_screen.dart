@@ -7,7 +7,6 @@ import '../../providers/theme_provider.dart';
 import '../common/chat_screen.dart';
 import '../common/notifications_screen.dart';
 import '../common/leaderboard_screen.dart';
-import '../common/subscription_screen.dart';
 import '../common/settings_screen.dart';
 import 'kid_cards_screen.dart';
 import 'kid_money_request_screen.dart';
@@ -123,7 +122,7 @@ class _KidProfileScreenState extends State<KidProfileScreen> {
             _MenuItem(icon: Icons.emoji_events, title: 'Рейтинг', onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const LeaderboardScreen()))),
             _MenuItem(icon: Icons.chat_bubble_outline, title: 'Семейный чат', onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ChatScreen()))),
             _MenuItem(icon: Icons.notifications_none, title: 'Уведомления', onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationsScreen()))),
-            _MenuItem(icon: Icons.workspace_premium, title: 'Подписка Pro', onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SubscriptionScreen()))),
+            
             _MenuItem(icon: Icons.settings, title: 'Настройки', onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsScreen()))),
             const SizedBox(height: 16),
             SizedBox(width: double.infinity, child: OutlinedButton.icon(

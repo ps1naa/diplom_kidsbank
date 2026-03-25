@@ -19,8 +19,13 @@ class _KidGoalsScreenState extends State<KidGoalsScreen> {
 
   Future<void> _load() async {
     try {
-      final goals = await context.read<ApiService>().get('goals/my?includeCompleted=true');
-      setState(() { _goals = goals as List; _loading = false; });
+      final goals = await context.read<ApiService>().get('goals/my?includeCompleted=true') as List;
+      goals.sort((a, b) {
+        final da = DateTime.tryParse(a['createdAt']?.toString() ?? '') ?? DateTime(2000);
+        final db = DateTime.tryParse(b['createdAt']?.toString() ?? '') ?? DateTime(2000);
+        return db.compareTo(da);
+      });
+      setState(() { _goals = goals; _loading = false; });
     } catch (_) { setState(() => _loading = false); }
   }
 

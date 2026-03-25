@@ -1,3 +1,4 @@
+using System;
 using System.Text;
 using KidBank.Application.Common.Interfaces;
 using KidBank.Infrastructure.Identity;

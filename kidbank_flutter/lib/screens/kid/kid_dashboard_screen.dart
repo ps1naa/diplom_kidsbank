@@ -11,6 +11,7 @@ import 'kid_money_request_screen.dart';
 import 'kid_savings_screen.dart';
 import 'kid_goals_screen.dart';
 import 'kid_categories_screen.dart';
+import 'kid_education_screen.dart' as kid_education_screen;
 
 class KidDashboardScreen extends StatefulWidget {
   const KidDashboardScreen({super.key});
@@ -155,7 +156,7 @@ class _KidDashboardScreenState extends State<KidDashboardScreen> with SingleTick
                   _QuickAction(icon: Icons.flag, label: 'Цели', color: AppColors.kidGradient2, onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const KidGoalsScreen()))),
                   _QuickAction(icon: Icons.emoji_events, label: 'Рейтинг', color: const Color(0xFFAB47BC), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const LeaderboardScreen()))),
                   _QuickAction(icon: Icons.category, label: 'Категории', color: const Color(0xFF5C6BC0), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const KidCategoriesScreen()))),
-                  _QuickAction(icon: Icons.workspace_premium, label: 'Pro', color: const Color(0xFFE91E63), onTap: () {}),
+                  _QuickAction(icon: Icons.school, label: 'Обучение', color: const Color(0xFFE91E63), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const kid_education_screen.KidEducationScreen()))),
                 ],
               ),
               if (_achievements != null && _achievements!.isNotEmpty) ...[

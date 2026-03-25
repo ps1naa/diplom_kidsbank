@@ -145,6 +145,9 @@ class ApiService {
       case 404:
         throw ApiException(404, msg.isNotEmpty ? msg : 'Не найдено',
             code: code ?? 'NOT_FOUND');
+      case 402:
+        throw ApiException(402, msg.isNotEmpty ? msg : 'Превышен лимит расходов',
+            code: code ?? 'SPENDING_LIMIT_EXCEEDED');
       case 409:
         throw ApiException(409, msg.isNotEmpty ? msg : 'Конфликт данных',
             code: code ?? 'CONFLICT');

@@ -16,6 +16,7 @@ class _KidEducationScreenState extends State<KidEducationScreen> with SingleTick
   List<dynamic>? _missions;
   List<dynamic>? _achievements;
   Map<String, dynamic>? _progress;
+  bool _isPro = false;
   bool _loading = true;
 
   @override
@@ -32,11 +33,19 @@ class _KidEducationScreenState extends State<KidEducationScreen> with SingleTick
         api.get('education/missions'),
         api.get('achievements/my').catchError((_) => <dynamic>[]),
         api.get('education/progress').catchError((_) => <String, dynamic>{}),
+        api.get('subscriptions').catchError((_) => <String, dynamic>{}),
+        api.get('users/me').catchError((_) => <String, dynamic>{}),
       ]);
+      final subData = results[3];
+      final meData = results[4];
       setState(() {
         _missions = results[0] is List ? results[0] as List : [];
         _achievements = results[1] is List ? results[1] as List : [];
         _progress = results[2] is Map ? results[2] as Map<String, dynamic> : {};
+        _isPro = subData is Map && subData['isPro'] == true;
+        if (meData is Map) {
+          _progress?['userTotalXp'] = meData['totalXp'] ?? 0;
+        }
         _loading = false;
       });
     } catch (_) { setState(() => _loading = false); }
@@ -79,7 +88,7 @@ class _KidEducationScreenState extends State<KidEducationScreen> with SingleTick
         itemBuilder: (_, i) {
           final m = _missions![i];
           final isTrial = i < 2;
-          final isLocked = !isTrial; // without sub, only first 2 are accessible
+          final isLocked = !isTrial && !_isPro;
           return TweenAnimationBuilder<double>(
             tween: Tween(begin: 0, end: 1),
             duration: Duration(milliseconds: 300 + i * 80),
@@ -136,7 +145,7 @@ class _KidEducationScreenState extends State<KidEducationScreen> with SingleTick
   }
 
   Widget _buildProgress() {
-    final xp = _progress?['totalXpEarned'] ?? 0;
+    final xp = _progress?['userTotalXp'] ?? _progress?['totalXpEarned'] ?? 0;
     final modules = _progress?['modules'] as List? ?? [];
     int quizzes = 0;
     int total = 0;
@@ -319,8 +328,17 @@ class _MissionPageState extends State<_MissionPage> {
     } catch (_) { setState(() => _loading = false); }
   }
 
-  void _openModule(dynamic moduleId) {
-    Navigator.push(context, MaterialPageRoute(builder: (_) => _ModuleQuizPage(moduleId: moduleId.toString())));
+  void _openModule(dynamic moduleId) async {
+    final modules = (_detail?['modules'] as List?) ?? [];
+    final currentIndex = modules.indexWhere((m) => m['id'].toString() == moduleId.toString());
+    final nextModuleId = (currentIndex >= 0 && currentIndex < modules.length - 1)
+        ? modules[currentIndex + 1]['id'].toString()
+        : null;
+    await Navigator.push(context, MaterialPageRoute(builder: (_) => _ModuleQuizPage(
+      moduleId: moduleId.toString(),
+      nextModuleId: nextModuleId,
+    )));
+    _load();
   }
 
   @override
@@ -370,7 +388,8 @@ class _MissionPageState extends State<_MissionPage> {
 
 class _ModuleQuizPage extends StatefulWidget {
   final String moduleId;
-  const _ModuleQuizPage({required this.moduleId});
+  final String? nextModuleId;
+  const _ModuleQuizPage({required this.moduleId, this.nextModuleId});
   @override
   State<_ModuleQuizPage> createState() => _ModuleQuizPageState();
 }
@@ -480,6 +499,23 @@ class _ModuleQuizPageState extends State<_ModuleQuizPage> {
                         ),
                       );
                     }),
+                    if (_lesson!['quizzes'] != null && _results.length == (_lesson!['quizzes'] as List).length) ...[
+                      const SizedBox(height: 16),
+                      if (widget.nextModuleId != null)
+                        SizedBox(width: double.infinity, child: ElevatedButton.icon(
+                          onPressed: () {
+                            Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => _ModuleQuizPage(moduleId: widget.nextModuleId!)));
+                          },
+                          icon: const Icon(Icons.arrow_forward),
+                          label: const Text('Следующий модуль'),
+                        ))
+                      else
+                        SizedBox(width: double.infinity, child: ElevatedButton.icon(
+                          onPressed: () => Navigator.pop(context),
+                          icon: const Icon(Icons.check),
+                          label: const Text('Завершить'),
+                        )),
+                    ],
                   ]),
                 ),
     );

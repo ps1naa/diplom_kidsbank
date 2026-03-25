@@ -167,16 +167,21 @@ class _KidCardsScreenState extends State<KidCardsScreen> with TickerProviderStat
                 decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(12)),
                 child: const Icon(Icons.visibility, color: AppColors.primary),
               ),
-              title: const Text('Показать данные карты'),
+              title: const Text('Полная информация о карте'),
               onTap: () {
                 Navigator.pop(ctx);
+                final fullNumber = card['cardNumber'] ?? '****';
+                final formatted = fullNumber.length == 16
+                    ? '${fullNumber.substring(0, 4)} ${fullNumber.substring(4, 8)} ${fullNumber.substring(8, 12)} ${fullNumber.substring(12)}'
+                    : fullNumber;
                 showDialog(context: context, builder: (_) => AlertDialog(
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                  title: const Text('Данные карты'),
+                  title: const Text('Полная информация о карте'),
                   content: Column(mainAxisSize: MainAxisSize.min, children: [
-                    _InfoRow('Номер', card['cardNumber'] ?? '****'),
+                    _InfoRow('Номер', formatted),
                     _InfoRow('Владелец', card['cardHolderName'] ?? ''),
                     _InfoRow('Срок', _formatExpiry(card['expiryDate'])),
+                    _InfoRow('CVV', card['cvv'] ?? '***'),
                   ]),
                   actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('Закрыть'))],
                 ));

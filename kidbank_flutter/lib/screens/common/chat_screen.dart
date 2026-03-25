@@ -67,28 +67,92 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Future<void> _sendMoney() async {
+    List<dynamic> kids;
+    try {
+      kids = await context.read<ApiService>().get('families/kids') as List;
+    } catch (_) { return; }
+    if (!mounted || kids.isEmpty) return;
+
     final amountCtrl = TextEditingController();
+    String? selectedKidId = kids.length == 1 ? kids.first['id'] : null;
+    String? selectedKidName = kids.length == 1 ? kids.first['firstName'] : null;
+
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
+      builder: (ctx) => StatefulBuilder(builder: (ctx, setDS) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Text('Отправить деньги'),
         content: Column(mainAxisSize: MainAxisSize.min, children: [
-          const Text('Перевод на счёт ребёнка из чата'),
-          const SizedBox(height: 12),
+          if (kids.length > 1) DropdownButtonFormField<String>(
+            decoration: const InputDecoration(labelText: 'Кому', prefixIcon: Icon(Icons.person)),
+            items: kids.map<DropdownMenuItem<String>>((k) => DropdownMenuItem(value: k['id'], child: Text('${k['firstName']} ${k['lastName']}'))).toList(),
+            onChanged: (v) => setDS(() { selectedKidId = v; selectedKidName = kids.firstWhere((k) => k['id'] == v)['firstName']; }),
+          ),
+          if (kids.length > 1) const SizedBox(height: 12),
           TextField(controller: amountCtrl, decoration: const InputDecoration(labelText: 'Сумма (BYN)', prefixIcon: Icon(Icons.attach_money)), keyboardType: TextInputType.number),
         ]),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Отмена')),
-          ElevatedButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Отправить')),
+          ElevatedButton(onPressed: selectedKidId != null ? () => Navigator.pop(ctx, true) : null, child: const Text('Отправить')),
+        ],
+      )),
+    );
+    if (confirmed == true && selectedKidId != null) {
+      try {
+        final amount = double.tryParse(amountCtrl.text) ?? 0;
+        await context.read<ApiService>().post('accounts/deposit', body: {
+          'kidId': selectedKidId,
+          'amount': amount,
+          'currency': 'BYN',
+        });
+        await context.read<ApiService>().post('chat/send', body: {'content': '💸 Отправлено $amount BYN для $selectedKidName'});
+        _load();
+      } catch (e) {
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      }
+    }
+  }
+
+  Future<void> _requestMoney() async {
+    final amountCtrl = TextEditingController();
+    final noteCtrl = TextEditingController();
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(children: [
+          Container(
+            width: 40, height: 40,
+            decoration: BoxDecoration(color: AppColors.accent.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(10)),
+            child: const Icon(Icons.request_page, color: AppColors.accent, size: 20),
+          ),
+          const SizedBox(width: 12),
+          const Text('Запросить деньги'),
+        ]),
+        content: Column(mainAxisSize: MainAxisSize.min, children: [
+          TextField(controller: amountCtrl, decoration: const InputDecoration(labelText: 'Сумма (BYN)', prefixIcon: Icon(Icons.attach_money)), keyboardType: TextInputType.number),
+          const SizedBox(height: 12),
+          TextField(controller: noteCtrl, decoration: const InputDecoration(labelText: 'На что? (необязательно)', prefixIcon: Icon(Icons.note)), maxLines: 2),
+        ]),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Отмена')),
+          ElevatedButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Запросить')),
         ],
       ),
     );
     if (confirmed == true) {
       try {
         final amount = double.tryParse(amountCtrl.text) ?? 0;
-        await context.read<ApiService>().post('chat/send', body: {'content': '💸 Отправлено $amount BYN'});
+        final note = noteCtrl.text.trim();
+        await context.read<ApiService>().post('moneyrequests', body: {
+          'amount': amount,
+          'currency': 'BYN',
+          'note': note.isNotEmpty ? note : 'Запрос из чата',
+        });
+        final noteText = note.isNotEmpty ? ' на $note' : '';
+        await context.read<ApiService>().post('chat/send', body: {'content': '🙏 Запрос: $amount BYN$noteText'});
         _load();
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Запрос отправлен!')));
       } catch (e) {
         if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
       }
@@ -110,6 +174,11 @@ class _ChatScreenState extends State<ChatScreen> {
             icon: const Icon(Icons.attach_money),
             tooltip: 'Отправить деньги',
             onPressed: _sendMoney,
+          ),
+          if (!isParent) IconButton(
+            icon: const Icon(Icons.request_page),
+            tooltip: 'Запросить деньги',
+            onPressed: _requestMoney,
           ),
         ],
       ),
@@ -170,7 +239,7 @@ class _ChatScreenState extends State<ChatScreen> {
     final content = msg['content'] ?? '';
     final rawTime = msg['createdAt'];
     final time = rawTime != null ? DateFormat('HH:mm').format(DateTime.parse(rawTime.toString()).toLocal()) : '';
-    final isMoneyMsg = content.startsWith('💸');
+    final isMoneyMsg = content.startsWith('💸') || content.startsWith('🙏');
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),

@@ -200,7 +200,15 @@ class _KidDetailPageState extends State<_KidDetailPage> {
         api.get('accounts/kid/$kidId'),
         api.get('reports/kid/$kidId?period=monthly'),
       ]);
-      setState(() { _accounts = results[0] as List; _report = results[1]; _loading = false; });
+      final accs = results[0] as List;
+      accs.sort((a, b) {
+        if (a['type'] == 'Main' && b['type'] != 'Main') return -1;
+        if (a['type'] != 'Main' && b['type'] == 'Main') return 1;
+        final da = DateTime.tryParse(a['createdAt']?.toString() ?? '') ?? DateTime(2000);
+        final db = DateTime.tryParse(b['createdAt']?.toString() ?? '') ?? DateTime(2000);
+        return db.compareTo(da);
+      });
+      setState(() { _accounts = accs; _report = results[1]; _loading = false; });
     } catch (_) { setState(() => _loading = false); }
   }
 
@@ -223,7 +231,20 @@ class _KidDetailPageState extends State<_KidDetailPage> {
                 if (_accounts != null && _accounts!.isNotEmpty) ...(_accounts!.map((a) => ListTile(
                   leading: Icon(a['type'] == 'Main' ? Icons.account_balance_wallet : Icons.savings, color: AppColors.primary),
                   title: Text(a['name'] ?? a['type']),
-                  trailing: Text('${(a['balance'] as num).toStringAsFixed(2)} BYN', style: const TextStyle(fontWeight: FontWeight.bold)),
+                  trailing: Row(mainAxisSize: MainAxisSize.min, children: [
+                    Text('${(a['balance'] as num).toStringAsFixed(2)} BYN', style: const TextStyle(fontWeight: FontWeight.bold)),
+                    if (a['type'] == 'Savings') ...[
+                      const SizedBox(width: 8),
+                      GestureDetector(
+                        onTap: () => _depositToKidSavings(kid, a),
+                        child: Container(
+                          width: 32, height: 32,
+                          decoration: BoxDecoration(color: AppColors.success.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(8)),
+                          child: const Icon(Icons.add, color: AppColors.success, size: 18),
+                        ),
+                      ),
+                    ],
+                  ]),
                   onTap: () => Navigator.push(context, MaterialPageRoute(
                     builder: (_) => ParentTxHistoryScreen(kidId: kidId, kidName: kid['firstName'], accountId: a['id']),
                   )),
@@ -254,6 +275,47 @@ class _KidDetailPageState extends State<_KidDetailPage> {
             ]),
           ],
         ),
+      ),
+    );
+  }
+
+  void _depositToKidSavings(dynamic kid, dynamic savingsAccount) {
+    final ctrl = TextEditingController();
+    showModalBottomSheet(
+      context: context, isScrollControlled: true,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (ctx) => Padding(
+        padding: EdgeInsets.fromLTRB(24, 24, 24, MediaQuery.of(ctx).viewInsets.bottom + 24),
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          Text('Пополнить копилку "${savingsAccount['name']}"', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: context.textPrimary)),
+          const SizedBox(height: 8),
+          Text('для ${kid['firstName']}', style: TextStyle(color: context.textSecondary)),
+          const SizedBox(height: 16),
+          TextField(controller: ctrl, decoration: const InputDecoration(labelText: 'Сумма (BYN)'), keyboardType: TextInputType.number),
+          const SizedBox(height: 16),
+          SizedBox(width: double.infinity, child: ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(ctx);
+              try {
+                final api = context.read<ApiService>();
+                final myAccounts = await api.get('accounts/my') as List;
+                final myMain = myAccounts.firstWhere((a) => a['type'] == 'Main', orElse: () => null);
+                if (myMain == null) throw Exception('Основной счёт не найден');
+                await api.post('accounts/transfer', body: {
+                  'sourceAccountId': myMain['id'],
+                  'destinationAccountId': savingsAccount['id'],
+                  'amount': double.tryParse(ctrl.text) ?? 0,
+                  'description': 'Пополнение копилки ${kid['firstName']}',
+                });
+                _load();
+                if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Копилка пополнена!')));
+              } catch (e) {
+                if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+              }
+            },
+            child: const Text('Пополнить'),
+          )),
+        ]),
       ),
     );
   }

@@ -65,4 +65,11 @@ public class AccountsController : BaseApiController
         var result = await Mediator.Send(command);
         return HandleResult(result);
     }
+
+    [HttpDelete("savings/{accountId:guid}")]
+    public async Task<IActionResult> DeleteSavingsAccount(Guid accountId)
+    {
+        var result = await Mediator.Send(new DeleteSavingsAccountCommand(accountId));
+        return HandleResult(result);
+    }
 }

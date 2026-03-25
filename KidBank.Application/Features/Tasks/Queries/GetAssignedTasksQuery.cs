@@ -32,7 +32,8 @@ public class GetAssignedTasksQueryHandler : IRequestHandler<GetAssignedTasksQuer
         var query = _context.TaskAssignments
             .Include(t => t.AssignedTo)
             .Include(t => t.CreatedBy)
-            .Where(t => t.AssignedToId == _currentUserService.UserId.Value);
+            .Where(t => t.AssignedToId == _currentUserService.UserId.Value
+                        || (_currentUserService.IsParent && t.CreatedById == _currentUserService.UserId.Value));
 
         if (!string.IsNullOrEmpty(request.Status) && Enum.TryParse<TaskAssignmentStatus>(request.Status, true, out var status))
         {

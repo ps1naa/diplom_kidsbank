@@ -19,8 +19,14 @@ class _KidSavingsScreenState extends State<KidSavingsScreen> {
   Future<void> _load() async {
     try {
       final all = await context.read<ApiService>().get('accounts/my') as List;
+      final savings = all.where((a) => a['type'] == 'Savings').toList();
+      savings.sort((a, b) {
+        final da = DateTime.tryParse(a['createdAt']?.toString() ?? '') ?? DateTime(2000);
+        final db = DateTime.tryParse(b['createdAt']?.toString() ?? '') ?? DateTime(2000);
+        return db.compareTo(da);
+      });
       setState(() {
-        _accounts = all.where((a) => a['type'] == 'Savings').toList();
+        _accounts = savings;
         _loading = false;
       });
     } catch (_) { setState(() => _loading = false); }
@@ -134,7 +140,11 @@ class _KidSavingsScreenState extends State<KidSavingsScreen> {
               )),
             ]),
             const SizedBox(height: 8),
-            Text('С подпиской Pro: 5% годовых и досрочный вывод', style: TextStyle(fontSize: 11, color: context.textHint), textAlign: TextAlign.center),
+            SizedBox(width: double.infinity, child: TextButton.icon(
+              onPressed: () => _deleteSavings(account),
+              icon: Icon(Icons.delete_outline, size: 18, color: AppColors.error),
+              label: Text('Удалить копилку', style: TextStyle(color: AppColors.error)),
+            )),
           ]),
         ),
       ),
@@ -225,6 +235,30 @@ class _KidSavingsScreenState extends State<KidSavingsScreen> {
         ]),
       ),
     );
+  }
+
+  Future<void> _deleteSavings(dynamic account) async {
+    final balance = (account['balance'] as num?)?.toDouble() ?? 0;
+    final confirmed = await showDialog<bool>(context: context, builder: (ctx) => AlertDialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      title: const Text('Удалить копилку?'),
+      content: Text(balance > 0
+          ? 'Средства (${balance.toStringAsFixed(2)} BYN) будут переведены на основной счёт.'
+          : 'Копилка "${account['name']}" будет удалена.'),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Отмена')),
+        ElevatedButton(onPressed: () => Navigator.pop(ctx, true), style: ElevatedButton.styleFrom(backgroundColor: AppColors.error), child: const Text('Удалить')),
+      ],
+    ));
+    if (confirmed == true) {
+      try {
+        await context.read<ApiService>().delete('accounts/savings/${account['id']}');
+        _load();
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Копилка удалена')));
+      } catch (e) {
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      }
+    }
   }
 
   void _withdraw(dynamic account) {

@@ -22,7 +22,9 @@ public record VirtualCardDto(
     bool IsFrozen,
     decimal? DailyLimit,
     decimal? MonthlyLimit,
-    DateTime CreatedAt);
+    DateTime CreatedAt,
+    string? Cvv = null,
+    string? MaskedNumber = null);
 
 public class CreateVirtualCardCommandValidator : AbstractValidator<CreateVirtualCardCommand>
 {
@@ -77,13 +79,15 @@ public class CreateVirtualCardCommandHandler : IRequestHandler<CreateVirtualCard
 
         return new VirtualCardDto(
             card.Id,
-            card.MaskedCardNumber,
+            card.CardNumber,
             card.CardHolderName,
             card.ExpiryDate,
             card.IsActive,
             card.IsFrozen,
             card.DailyLimit,
             card.MonthlyLimit,
-            card.CreatedAt);
+            card.CreatedAt,
+            card.Cvv,
+            card.MaskedCardNumber);
     }
 }

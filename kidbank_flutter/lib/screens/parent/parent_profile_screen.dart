@@ -106,7 +106,7 @@ class _ParentProfileScreenState extends State<ParentProfileScreen> {
             Text('Меню', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: context.textSecondary)),
             const SizedBox(height: 8),
             _MenuItem(icon: Icons.history, title: 'Активность', onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ActivityScreen()))),
-            _MenuItem(icon: Icons.notifications_none, title: 'Уведомления', badge: _notifCount, onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationsScreen()))),
+            _MenuItem(icon: Icons.notifications_none, title: 'Уведомления', badge: _notifCount, onTap: () async { await Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationsScreen())); _load(); }),
             _MenuItem(icon: Icons.chat_bubble_outline, title: 'Семейный чат', onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ChatScreen()))),
             _MenuItem(icon: Icons.request_page, title: 'Запросы денег', onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ParentMoneyRequestsScreen()))),
             _MenuItem(icon: Icons.schedule, title: 'Авто-пополнение', onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ParentAllowanceScreen()))),
