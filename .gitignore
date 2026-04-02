@@ -89,7 +89,10 @@ Desktop.ini
 ## E2E / manual test scripts (local only)
 scripts/
 
-## Draw.io / diagrams.net (локальные черновики и бэкапы)
-diagrams/.$*
+## Документация и диаграммы (не версионируются)
+docs/
+diagrams/
+
+## Draw.io / diagrams.net (черновики и бэкапы вне игнорируемых папок)
 **/*.drawio.dtmp
 **/*.drawio.bkp
