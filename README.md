@@ -4,10 +4,10 @@
 
 ## Технологический стек
 
-- **.NET 8** — ASP.NET Core Web API
+- **.NET** — ASP.NET Core Web API
 - **Архитектура** — Clean Architecture (Domain, Application, Infrastructure, API)
 - **БД** — PostgreSQL (две базы: основная `kidbank` и настройки `kidbank_settings`)
-- **ORM** — Entity Framework Core 8
+- **ORM** — Entity Framework Core 
 - **Кэш и рассылка событий** — Redis (Pub/Sub для синхронизации настроек между инстансами)
 - **Аутентификация** — JWT + Refresh Tokens, BCrypt для паролей
 - **CQRS** — MediatR
